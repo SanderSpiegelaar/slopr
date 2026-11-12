@@ -37,3 +37,7 @@ Approved by Sander on 2026-11-12.
 
 - FNV-1a replaces sha256 for the fingerprint. It needs no new crate and its output is stable.
 - `via_fallow_for_js` is removed, because no v0 or v1 rule needs it and `langs` already says it.
+
+## SARIF validation (2026-11-12)
+
+- Field assertions in `tests/cli.rs` replace the SARIF schema test, because no schema validator crate is in the approved dependency list. See [SARIF checks](../reference/testing.md#sarif-checks).
