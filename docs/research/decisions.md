@@ -46,4 +46,6 @@ Approved by Sander on 2026-11-12.
 
 - slopr reads fallow's JSON, not its SARIF. The Phase 0 SARIF drops the second file of a cycle, the link between clone instances, the cognitive score, every end position, and whether an audit finding is new. See [Phase 0 findings](../reference/fallow.md#phase-0-findings).
 - slopr's SARIF output builds the fallow run from the mapped findings instead of appending fallow's runs. See [Run details](../reference/fallow.md#run-details).
+- A full scan runs one bare `fallow --only <L>` for `dead-code`, `dupes`, `health` and `architecture`, plus one `fallow security` and one `fallow flags` run when listed. The bare envelope has no security or flag section. See [Behavior](../reference/fallow.md#behavior).
+- Severity comes from each finding's `effective_severity`, which reflects `.fallowrc` overrides. Diff mode keeps only audit findings with `introduced: true`. JSON columns are 0-based UTF-8 byte offsets, and `end_col` is exclusive. See [Field mapping](../reference/fallow.md#field-mapping).
 - This replaces the SARIF parts of the 2026-11-11 record.
