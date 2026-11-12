@@ -1,0 +1,18 @@
+---
+source: tests/cli.rs
+expression: written
+---
+exclude = []
+
+[rules]
+"ts/unsafe-assertion" = "warn"
+
+[rules.settings."comment/untracked-todo"]
+issue_pattern = '(#\d+|[A-Z]+-\d+|https?://)'
+
+[fallow]
+enabled = "auto"
+bin = ""
+version = ">=3.42, <4"
+commands = ["dead-code", "dupes", "health"]
+args = []

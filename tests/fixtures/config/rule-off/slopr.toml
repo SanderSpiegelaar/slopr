@@ -1,0 +1,2 @@
+[rules]
+"ts/unsafe-assertion" = "off"

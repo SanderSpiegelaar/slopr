@@ -1,0 +1,8 @@
+---
+source: tests/cli.rs
+expression: stdout(&output)
+---
+a.ts:1:11 error ts/unsafe-assertion `as any` assertion
+
+1 ts/unsafe-assertion
+1 findings (1 error, 0 warn, 0 info)

@@ -1,0 +1,10 @@
+[rules]
+"ts/unsafe-assertion" = "error"
+
+[[overrides]]
+paths = ["**/*.ts"]
+rules = { "ts/unsafe-assertion" = "off" }
+
+[[overrides]]
+paths = ["keep/**"]
+rules = { "ts/unsafe-assertion" = "info" }

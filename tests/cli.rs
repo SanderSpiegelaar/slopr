@@ -23,3 +23,101 @@ fn skeleton_clean_file_exits_zero() {
         .code(0)
         .stdout("0 findings\n");
 }
+
+const CONFIG_FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/config");
+
+fn check_in(fixture: &str) -> std::process::Output {
+    cargo_bin_cmd!("slopr")
+        .current_dir(format!("{CONFIG_FIXTURES}/{fixture}"))
+        .arg("check")
+        .output()
+        .expect("slopr runs")
+}
+
+fn stdout(output: &std::process::Output) -> &str {
+    std::str::from_utf8(&output.stdout).expect("stdout is UTF-8")
+}
+
+fn assert_config_error(fixture: &str) {
+    let output = check_in(fixture);
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8(output.stderr).expect("stderr is UTF-8");
+    assert!(stderr.starts_with("slopr: slopr.toml: "), "{stderr}");
+}
+
+/// A fresh empty directory per test, so parallel tests never share files.
+fn empty_dir(name: &str) -> std::path::PathBuf {
+    let dir = std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("temp dir is created");
+    dir
+}
+
+#[test]
+fn config_rule_off() {
+    let output = check_in("rule-off");
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(stdout(&output), "0 findings\n");
+}
+
+#[test]
+fn config_severity_raised() {
+    let output = check_in("severity-raised");
+    assert_eq!(output.status.code(), Some(1));
+    insta::assert_snapshot!(stdout(&output));
+}
+
+#[test]
+fn config_override_last_wins() {
+    let output = check_in("override-last-wins");
+    assert_eq!(output.status.code(), Some(0));
+    insta::assert_snapshot!(stdout(&output));
+}
+
+#[test]
+fn config_exclude() {
+    let output = check_in("exclude");
+    assert_eq!(output.status.code(), Some(0));
+    insta::assert_snapshot!(stdout(&output));
+}
+
+#[test]
+fn config_unknown_key_exits_2() {
+    assert_config_error("unknown-key");
+}
+
+#[test]
+fn config_bad_regex_exits_2() {
+    assert_config_error("bad-regex");
+}
+
+#[test]
+fn config_init_writes_file() {
+    let dir = empty_dir("config_init_writes_file");
+    cargo_bin_cmd!("slopr")
+        .current_dir(&dir)
+        .arg("init")
+        .assert()
+        .code(0);
+    let written = std::fs::read_to_string(dir.join("slopr.toml")).expect("slopr.toml is written");
+    insta::assert_snapshot!(written);
+    cargo_bin_cmd!("slopr")
+        .current_dir(&dir)
+        .arg("check")
+        .assert()
+        .code(0)
+        .stdout("0 findings\n");
+}
+
+#[test]
+fn config_init_refuses_overwrite() {
+    let dir = empty_dir("config_init_refuses_overwrite");
+    std::fs::write(dir.join("slopr.toml"), "exclude = []\n").expect("slopr.toml is written");
+    cargo_bin_cmd!("slopr")
+        .current_dir(&dir)
+        .arg("init")
+        .assert()
+        .code(2);
+    let kept = std::fs::read_to_string(dir.join("slopr.toml")).expect("slopr.toml is read");
+    assert_eq!(kept, "exclude = []\n");
+}
