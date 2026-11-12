@@ -1,3 +1,5 @@
 /target
 .repowise
 .claude/worktrees/**
+.ruff_cache
+.fallow
