@@ -41,3 +41,9 @@ Approved by Sander on 2026-11-12.
 ## SARIF validation (2026-11-12)
 
 - Field assertions in `tests/cli.rs` replace the SARIF schema test, because no schema validator crate is in the approved dependency list. See [SARIF checks](../reference/testing.md#sarif-checks).
+
+## fallow output format (2026-11-12)
+
+- slopr reads fallow's JSON, not its SARIF. The Phase 0 SARIF drops the second file of a cycle, the link between clone instances, the cognitive score, every end position, and whether an audit finding is new. See [Phase 0 findings](../reference/fallow.md#phase-0-findings).
+- slopr's SARIF output builds the fallow run from the mapped findings instead of appending fallow's runs. See [Run details](../reference/fallow.md#run-details).
+- This replaces the SARIF parts of the 2026-11-11 record.
