@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: "repo_report(\"ts-app\", \"human\")"
+---
+src/index.ts:10:1 warn debug/leftover `console.log` left in library code
+
+src/utils.ts:2:10 warn ts/unsafe-assertion `as any` assertion
+
+1 debug/leftover
+1 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)

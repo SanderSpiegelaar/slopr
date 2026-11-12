@@ -687,3 +687,96 @@ src/utils.ts:7:24 error fallow/unused-export Export is never imported: uni
 "
     );
 }
+
+const REPOS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/repos");
+
+/// `slopr check --fallow off <args>` with the fixture repo as cwd, so output paths are root-relative.
+fn repo_check(repo: &str, args: &[&str]) -> std::process::Output {
+    cargo_bin_cmd!("slopr")
+        .current_dir(format!("{REPOS}/{repo}"))
+        .args(["check", "--fallow", "off"])
+        .args(args)
+        .output()
+        .expect("slopr runs")
+}
+
+fn repo_report(repo: &str, format: &str) -> String {
+    let output = repo_check(repo, &["--format", format]);
+    stdout(&output).to_owned()
+}
+
+#[test]
+fn repos_ts_app_human() {
+    insta::assert_snapshot!(repo_report("ts-app", "human"));
+}
+
+#[test]
+fn repos_ts_app_json() {
+    insta::assert_snapshot!(repo_report("ts-app", "json"));
+}
+
+#[test]
+fn repos_ts_app_sarif() {
+    insta::assert_snapshot!(repo_report("ts-app", "sarif"));
+}
+
+#[test]
+fn repos_py_lib_human() {
+    insta::assert_snapshot!(repo_report("py-lib", "human"));
+}
+
+#[test]
+fn repos_py_lib_json() {
+    insta::assert_snapshot!(repo_report("py-lib", "json"));
+}
+
+#[test]
+fn repos_py_lib_sarif() {
+    insta::assert_snapshot!(repo_report("py-lib", "sarif"));
+}
+
+#[test]
+fn repos_rust_crate_human() {
+    insta::assert_snapshot!(repo_report("rust-crate", "human"));
+}
+
+#[test]
+fn repos_rust_crate_json() {
+    insta::assert_snapshot!(repo_report("rust-crate", "json"));
+}
+
+#[test]
+fn repos_rust_crate_sarif() {
+    insta::assert_snapshot!(repo_report("rust-crate", "sarif"));
+}
+
+#[test]
+fn repos_exit_0() {
+    // ts-app's native findings are all warn, below the default error gate.
+    let output = repo_check("ts-app", &[]);
+    assert_eq!(output.status.code(), Some(0));
+}
+
+#[test]
+fn repos_exit_1() {
+    let output = repo_check("py-lib", &[]);
+    assert_eq!(output.status.code(), Some(1));
+}
+
+#[test]
+fn repos_exit_2() {
+    let output = repo_check("rust-crate", &["--max-severity-exit", "fatal"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty(), "scanned anyway");
+}
+
+#[test]
+fn repos_exit_3() {
+    cargo_bin_cmd!("slopr")
+        .current_dir(format!("{REPOS}/ts-app"))
+        .env("FAKE_FALLOW_VERSION", "3.41.0")
+        .args(["check", "--fallow-bin", FAKE_FALLOW])
+        .assert()
+        .code(3)
+        .stderr(fallow_unsatisfied("3.41.0"));
+}

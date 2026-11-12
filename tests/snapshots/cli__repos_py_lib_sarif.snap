@@ -1,0 +1,252 @@
+---
+source: tests/cli.rs
+expression: "repo_report(\"py-lib\", \"sarif\")"
+---
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "slopr",
+          "version": "0.1.0",
+          "rules": [
+            {
+              "id": "comment/agent-artifact",
+              "shortDescription": {
+                "text": "Agent chatter about its plan, spec or past edits"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "comment/narrative",
+              "shortDescription": {
+                "text": "Comment narrates what the code does"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/section-divider",
+              "shortDescription": {
+                "text": "Decorative section divider comment"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/step-numbered",
+              "shortDescription": {
+                "text": "Numbered step or phase header comment"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/untracked-todo",
+              "shortDescription": {
+                "text": "TODO, FIXME, HACK or XXX without an issue reference"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "debug/leftover",
+              "shortDescription": {
+                "text": "Debug output or breakpoint left in library code"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "error/redundant-rethrow",
+              "shortDescription": {
+                "text": "Catch that only rethrows the same error"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "error/swallowed",
+              "shortDescription": {
+                "text": "Error handler that hides the failure"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "sec/hardcoded-secret",
+              "shortDescription": {
+                "text": "Hardcoded API key, token or private key"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "stub/placeholder-body",
+              "shortDescription": {
+                "text": "Function body left as a placeholder"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "suppress/invalid-directive",
+              "shortDescription": {
+                "text": "Suppression directive that is malformed, has no reason or names an unknown rule"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "test/tautological",
+              "shortDescription": {
+                "text": "Test assertion that always passes"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "text/invisible-unicode",
+              "shortDescription": {
+                "text": "Zero-width or bidi control character"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "ts/unsafe-assertion",
+              "shortDescription": {
+                "text": "Type assertion to any, or a double assertion through unknown"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "error/swallowed",
+          "level": "error",
+          "message": {
+            "text": "except block swallows the error"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ledger/rates.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 5,
+                  "endLine": 11,
+                  "endColumn": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "106fb134847451f0"
+          }
+        },
+        {
+          "ruleId": "comment/untracked-todo",
+          "level": "note",
+          "message": {
+            "text": "`TODO` without an issue reference"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ledger/rates.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 5,
+                  "endLine": 16,
+                  "endColumn": 31
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "2ff16444a7ebe0d1"
+          }
+        },
+        {
+          "ruleId": "debug/leftover",
+          "level": "warning",
+          "message": {
+            "text": "`print` left in library code"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/ledger/report.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 5,
+                  "endLine": 6,
+                  "endColumn": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "b77d98682501fc43"
+          }
+        },
+        {
+          "ruleId": "test/tautological",
+          "level": "error",
+          "message": {
+            "text": "assertion always passes"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/test_accounts.py",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 5,
+                  "endLine": 11,
+                  "endColumn": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "f657b9b75697c67a"
+          }
+        }
+      ]
+    }
+  ]
+}
