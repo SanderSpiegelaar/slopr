@@ -17,3 +17,5 @@
 | insta, assert_cmd (dev) | 1.49.0, 2.2.2 | Apache-2.0, MIT OR Apache-2.0 | snapshots, CLI tests |
 
 Phase 0 must verify that the four grammar crates build against tree-sitter 0.27 through the `tree-sitter-language` `LanguageFn` interface (`parser.set_language(&tree_sitter_rust::LANGUAGE.into())`).
+
+Phase 0 result (2026-11-12). All four grammar crates build unchanged against tree-sitter 0.27.2 (tree-sitter-language 0.1.9) with Rust 1.96.1, and `set_language` plus a clean parse succeeded for TypeScript, TSX, Python, Rust and Go. No version had to change.
