@@ -230,3 +230,179 @@ fn output_json_deterministic() {
     assert!(report["summary"]["total"].as_u64() > Some(0), "no findings");
     assert_eq!(first.stdout, second.stdout);
 }
+
+const SUPPRESS: &str = "tests/fixtures/suppress";
+
+fn assert_suppress(fixture: &str, want: &str) {
+    let output = run_check(&[&format!("{SUPPRESS}/{fixture}")]);
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(stdout(&output), want);
+}
+
+#[test]
+fn suppress_next_line() {
+    assert_suppress(
+        "next-line.ts",
+        "tests/fixtures/suppress/next-line.ts:5:15 warn ts/unsafe-assertion `as any` assertion
+
+1 ts/unsafe-assertion
+1 findings (0 error, 1 warn, 0 info)
+",
+    );
+    let path = format!("{SUPPRESS}/next-line.ts");
+    let json = run_check(&["--format", "json", &path]);
+    assert_eq!(json.status.code(), Some(0));
+    let report: serde_json::Value = serde_json::from_slice(&json.stdout).expect("json is JSON");
+    let lines: Vec<&serde_json::Value> = report["findings"]
+        .as_array()
+        .expect("findings is an array")
+        .iter()
+        .map(|f| &f["span"]["start_line"])
+        .collect();
+    assert_eq!(lines, [5]);
+    let sarif = run_check(&["--format", "sarif", &path]);
+    assert_eq!(sarif.status.code(), Some(0));
+    let log: serde_json::Value = serde_json::from_slice(&sarif.stdout).expect("SARIF is JSON");
+    let lines: Vec<&serde_json::Value> = log["runs"][0]["results"]
+        .as_array()
+        .expect("results is an array")
+        .iter()
+        .map(|r| &r["locations"][0]["physicalLocation"]["region"]["startLine"])
+        .collect();
+    assert_eq!(lines, [5]);
+}
+
+#[test]
+fn suppress_next_line_skips_blank() {
+    assert_suppress(
+        "next-line-skips-blank.ts",
+        "tests/fixtures/suppress/next-line-skips-blank.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+
+1 ts/unsafe-assertion
+1 findings (0 error, 1 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_file() {
+    assert_suppress(
+        "file.ts",
+        "tests/fixtures/suppress/file.ts:5:1 info comment/untracked-todo `TODO` without an issue reference
+
+1 comment/untracked-todo
+1 findings (0 error, 0 warn, 1 info)
+",
+    );
+}
+
+#[test]
+fn suppress_multiple_ids() {
+    assert_suppress(
+        "multiple-ids.ts",
+        "tests/fixtures/suppress/multiple-ids.ts:5:15 warn ts/unsafe-assertion `as any` assertion
+tests/fixtures/suppress/multiple-ids.ts:5:29 info comment/untracked-todo `TODO` without an issue reference
+
+1 comment/untracked-todo
+1 ts/unsafe-assertion
+2 findings (0 error, 1 warn, 1 info)
+",
+    );
+}
+
+#[test]
+fn suppress_missing_reason_is_invalid() {
+    assert_suppress(
+        "missing-reason.ts",
+        "tests/fixtures/suppress/missing-reason.ts:5:4 warn suppress/invalid-directive directive needs a reason after ` -- `
+tests/fixtures/suppress/missing-reason.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+tests/fixtures/suppress/missing-reason.ts:7:4 warn suppress/invalid-directive directive needs a reason after ` -- `
+tests/fixtures/suppress/missing-reason.ts:8:19 warn ts/unsafe-assertion `as any` assertion
+
+2 suppress/invalid-directive
+2 ts/unsafe-assertion
+4 findings (0 error, 4 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_unknown_rule_is_invalid() {
+    assert_suppress(
+        "unknown-rule.ts",
+        "tests/fixtures/suppress/unknown-rule.ts:5:4 warn suppress/invalid-directive directive names unknown rule `ts/unsafe-asertion`
+tests/fixtures/suppress/unknown-rule.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+
+1 suppress/invalid-directive
+1 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_fallow_prefix_accepted() {
+    assert_suppress(
+        "fallow-prefix.ts",
+        "tests/fixtures/suppress/fallow-prefix.ts:5:22 warn ts/unsafe-assertion `as any` assertion
+
+1 ts/unsafe-assertion
+1 findings (0 error, 1 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_invalid_cannot_be_suppressed() {
+    assert_suppress(
+        "invalid-cannot-be-suppressed.ts",
+        "tests/fixtures/suppress/invalid-cannot-be-suppressed.ts:1:4 warn suppress/invalid-directive directive names unknown rule `suppress/invalid-directive`
+tests/fixtures/suppress/invalid-cannot-be-suppressed.ts:6:4 warn suppress/invalid-directive malformed directive, expected `slopr-ignore-next-line|file <rule-id> -- <reason>`
+tests/fixtures/suppress/invalid-cannot-be-suppressed.ts:7:15 warn ts/unsafe-assertion `as any` assertion
+
+2 suppress/invalid-directive
+1 ts/unsafe-assertion
+3 findings (0 error, 3 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_block_comment_targets_line_after_comment() {
+    assert_suppress(
+        "block-comment.ts",
+        "tests/fixtures/suppress/block-comment.ts:9:4 warn suppress/invalid-directive directive needs a reason after ` -- `
+tests/fixtures/suppress/block-comment.ts:11:15 warn ts/unsafe-assertion `as any` assertion
+
+1 suppress/invalid-directive
+1 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_partly_invalid_suppresses_nothing() {
+    assert_suppress(
+        "partly-invalid.ts",
+        "tests/fixtures/suppress/partly-invalid.ts:5:4 warn suppress/invalid-directive directive names unknown rule `made/up`
+tests/fixtures/suppress/partly-invalid.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+
+1 suppress/invalid-directive
+1 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)
+",
+    );
+}
+
+#[test]
+fn suppress_mention_mid_line_ignored() {
+    assert_suppress(
+        "mention-mid-line.ts",
+        "tests/fixtures/suppress/mention-mid-line.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+
+1 ts/unsafe-assertion
+1 findings (0 error, 1 warn, 0 info)
+",
+    );
+}
