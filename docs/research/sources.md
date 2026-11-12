@@ -101,3 +101,33 @@ Smaller sources
 - axonscanner: verification ladder from asserted to claimed-only per module (`src/axonscanner/scanner.py`).
 - slopgate: PR description, linked issue, tests, author signals via GitHub API (`slopgate.py`).
 - rayonx, AI-Slop-Linter-for-code: regex trivial-comment and placeholder lists, nothing not covered above.
+
+## Ported lists
+
+Rule tickets copy each list below from the pinned commit, and cite the repo, path and SHA in a comment next to the list. Both repos are MIT, so `THIRD_PARTY_NOTICES.md` holds their license text. Each path was confirmed to exist at its SHA in shallow clones made on 2026-11-12.
+
+| List | slopr rule | Repo | File path | Commit SHA | License |
+|---|---|---|---|---|---|
+| Narrative openers: `JUSTIFICATION_OPENERS`, `EXPLANATORY_OPENERS` | `comment/narrative` | scanaislop/aislop | `src/engines/ai-slop/narrative-comments-patterns.ts` | `9e83199f503fb8dd82c2688efdeca9ce8b404a32` | MIT |
+| Narrative openers: `THIS_OPENER` (`vend/this-function-opener`) | `comment/narrative` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+| Agent artifacts: `PLAN_REFERENCE_RES`, `BEFORE_AFTER_RES` (`ai-slop/meta-comment`) | `comment/agent-artifact` | scanaislop/aislop | `src/engines/ai-slop/meta-comment.ts` | `9e83199f503fb8dd82c2688efdeca9ce8b404a32` | MIT |
+| Agent artifacts: `AI_PLAN_REFERENCE`, `AI_PLAN_ACK` (`vend/ai-plan-narration`) | `comment/agent-artifact` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+| Changelog markers: `CHANGELOG_STRONG`, `CHANGELOG_WEAK` (`changelog-marker`) | `comment/changelog` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+| Changelog markers: `CROSS_REFERENCE_PHRASES` | `comment/changelog` | scanaislop/aislop | `src/engines/ai-slop/narrative-comments-patterns.ts` | `9e83199f503fb8dd82c2688efdeca9ce8b404a32` | MIT |
+| AI vocabulary: `AI_VOCAB_TOKENS` (`vend/ai-vocab-density`) | `comment/ai-vocab-density` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+| Zero-width code points: `ZERO_WIDTH`, `ZWJ_CHAR`, `FEFF_CHAR` (`vend/zero-width-chars`) | `text/invisible-unicode` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+| Bidi controls: `BIDI` (`vend/bidi-controls`) | `text/invisible-unicode` | WhiteBite/stop-ai-slop | `skill/scripts/src/markers.mjs` | `d2c586881bf4ead6ab2865dde90f45f247d58972` | MIT |
+
+stop-ai-slop has no file per rule. Every list above from that repo is a named export in `markers.mjs`, and `detect.mjs` maps it to the rule ID. Its detekt port repeats the lists in `detekt-rules/src/main/kotlin/whitebite/slop/SlopMarkers.kt`. Port from `markers.mjs`.
+
+The invisible code point rows are provenance only. The ranges themselves are in the rule catalog. `BIDI` holds U+202A to U+202E and U+2066 to U+2069. `ZERO_WIDTH` holds U+200B, U+200C and U+2060. U+200D and U+FEFF are separate constants with context checks. The same file has `BIDI_MARK` for U+200E and U+200F, which the catalog leaves out.
+
+slopr writes the lists below itself and copies no upstream file, so they need no notice.
+
+| List | slopr rule | Catalog sources not copied |
+|---|---|---|
+| Secret patterns | `sec/hardcoded-secret` | aislop `security/hardcoded-secret`; vibecheck `no-hardcoded-secrets` (FSL-1.1, ideas only); OPK-001; slopsieve |
+| Section dividers | `comment/section-divider` | aislop `DECORATIVE_SEPARATOR`; stop-ai-slop `vend/section-divider`; vibecheck `no-section-dividers` (FSL-1.1, ideas only); sloplint; agent-slop-lint; SynthScan |
+| Step headers | `comment/step-numbered` | aislop `SECTION_HEADER`; stop-ai-slop `vend/step-numbered`; vibecheck `no-step-comments` (FSL-1.1, ideas only); sloplint |
+| Vague error messages | `error/vague-message` | vibecheck `no-vague-error` (FSL-1.1, ideas only); slop-guard `check_generic_error_messages` (no license) |
+| Generic names | `naming/generic` | aislop `ai-slop/generic-naming`; SynthScan magic placeholder names |
