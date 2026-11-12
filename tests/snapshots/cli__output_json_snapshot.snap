@@ -1,0 +1,126 @@
+---
+source: tests/cli.rs
+expression: stdout(&output)
+---
+{
+  "schema_version": 1,
+  "version": "0.1.0",
+  "findings": [
+    {
+      "rule": "comment/agent-artifact",
+      "severity": "error",
+      "path": "tests/fixtures/rules/comment/agent-artifact/bad.rs",
+      "span": {
+        "start_line": 1,
+        "start_col": 1,
+        "end_line": 1,
+        "end_col": 68
+      },
+      "message": "agent artifact `as instructed`",
+      "fingerprint": "7c2961696980909b",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "comment/agent-artifact",
+      "severity": "error",
+      "path": "tests/fixtures/rules/comment/agent-artifact/bad.rs",
+      "span": {
+        "start_line": 3,
+        "start_col": 5,
+        "end_line": 3,
+        "end_col": 54
+      },
+      "message": "agent artifact `was moved from`",
+      "fingerprint": "66c819ad121d1c09",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "comment/untracked-todo",
+      "severity": "info",
+      "path": "tests/fixtures/rules/comment/untracked-todo/bad.ts",
+      "span": {
+        "start_line": 1,
+        "start_col": 1,
+        "end_line": 1,
+        "end_col": 59
+      },
+      "message": "`TODO` without an issue reference",
+      "fingerprint": "900f0a249ed00274",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "comment/untracked-todo",
+      "severity": "info",
+      "path": "tests/fixtures/rules/comment/untracked-todo/bad.ts",
+      "span": {
+        "start_line": 3,
+        "start_col": 3,
+        "end_line": 3,
+        "end_col": 23
+      },
+      "message": "`XXX` without an issue reference",
+      "fingerprint": "f7b1b0563e8a74d5",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "ts/unsafe-assertion",
+      "severity": "warn",
+      "path": "tests/fixtures/rules/ts/unsafe-assertion/bad.tsx",
+      "span": {
+        "start_line": 4,
+        "start_col": 16,
+        "end_line": 4,
+        "end_col": 28
+      },
+      "message": "`as any` assertion",
+      "fingerprint": "fc76a106b62f0dae",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "ts/unsafe-assertion",
+      "severity": "warn",
+      "path": "tests/fixtures/rules/ts/unsafe-assertion/bad.tsx",
+      "span": {
+        "start_line": 5,
+        "start_col": 17,
+        "end_line": 5,
+        "end_col": 43
+      },
+      "message": "`as unknown as` double assertion",
+      "fingerprint": "ec4478f713a661f5",
+      "origin": {
+        "kind": "native"
+      }
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "by_severity": {
+      "error": 2,
+      "warn": 2,
+      "info": 2
+    },
+    "by_rule": {
+      "comment/agent-artifact": 2,
+      "comment/untracked-todo": 2,
+      "ts/unsafe-assertion": 2
+    }
+  },
+  "tools": [
+    {
+      "name": "fallow",
+      "version": null,
+      "status": "skipped"
+    }
+  ]
+}

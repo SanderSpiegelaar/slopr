@@ -25,7 +25,6 @@ pub enum Check {
 
 pub struct Rule {
     pub id: &'static str,
-    #[allow(dead_code, reason = "read by the rules and sarif output tickets")]
     pub summary: &'static str,
     pub default_severity: Severity,
     /// Empty means every file, including unparsed text.
