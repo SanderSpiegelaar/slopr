@@ -2,7 +2,11 @@
 # Prints $FAKE_FALLOW_DIR/<command>.json, or an empty envelope when it is unset.
 # FAKE_FALLOW_EXIT sets the exit code.
 case "$1" in
---version) echo "fallow ${FAKE_FALLOW_VERSION:-3.42.0}"; exit 0 ;;
+--version)
+	echo "fallow ${FAKE_FALLOW_VERSION:-3.42.0}"
+	echo "verified: yes (cache hit at .fallow-verified); fallow ${FAKE_FALLOW_VERSION:-3.42.0} signed"
+	exit 0
+	;;
 --only) command=combined ;;
 security | flags) command=$1 ;;
 *) echo "fake-fallow: unsupported: $*" >&2; exit 2 ;;
