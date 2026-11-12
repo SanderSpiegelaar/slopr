@@ -207,7 +207,8 @@ pub fn check(config: &Fallow, paths: &[PathBuf]) -> Result<Option<Bin>, Unsatisf
         .ok()
         .map(|out| {
             let text = String::from_utf8_lossy(&out.stdout);
-            let text = text.trim();
+            // The npm launcher prints a signature line after the version.
+            let text = text.lines().next().unwrap_or_default().trim();
             text.strip_prefix("fallow ").unwrap_or(text).to_owned()
         });
     if let Some(found) = &found
