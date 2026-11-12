@@ -24,7 +24,7 @@ Add `## Diff mode` to `cli.md`:
 - Passing both flags, or either one outside a git work tree, exits 2.
 - Changed lines are the new-side line ranges of each hunk. Deletion-only hunks add none. A renamed file uses its new path.
 - Only changed files are scanned. A finding is kept when its span intersects a changed line. A file-level finding, one whose span covers the whole file, is kept when the file has any changed line.
-- fallow in diff mode runs `fallow audit --base <base> --format sarif --quiet` in place of the full-scan commands, with `<base>` being the merge base, or `HEAD` for `--staged`. Its findings are not line-filtered.
+- fallow in diff mode runs `fallow audit --base <base> --format json --quiet` in place of the full-scan commands, with `<base>` being the merge base, or `HEAD` for `--staged`. Its findings are not line-filtered.
 - `pr/*` findings use the changed file with the most added lines (ties broken by path order), with a span on that file's first changed line. `pr/no-tests-changed` fires when the added lines in parsed non-test files reach `pr_min_added_lines` and no changed file is a test file. `pr/oversized-diff` fires when added lines exceed `pr_max_added_lines` or changed files exceed `pr_max_files`. Both run only in diff mode.
 
 ## Out of scope
