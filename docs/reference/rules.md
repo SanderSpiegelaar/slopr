@@ -61,7 +61,7 @@ TS is TypeScript and Tsx. JS is JavaScript, parsed with the TSX grammar. PY is P
 | Rule | Langs | Matches |
 |---|---|---|
 | `comment/narrative` | TS JS PY RS | Comment whose text starts (case-insensitive, after whitespace) with a phrase from the ported narrative list. |
-| `comment/section-divider` | TS JS PY RS | Comment matching `^([=\-*#~_])\1{3,}` or `^[=\-*#~_]{3,}\s+.+?\s+[=\-*#~_]{3,}$`. |
+| `comment/section-divider` | TS JS PY RS | Comment matching `^([=\-*#~_])\1{3,}` or `^([=\-*#~_])\1{2,}\s+.+?\s+([=\-*#~_])\2{2,}$`. Each run in the titled form repeats one character, so `-*- coding: utf-8 -*-` does not match. |
 | `comment/step-numbered` | TS JS PY RS | Comment matching `(?i)^(step\|phase\|stage)\s+\d+\b`. |
 | `comment/agent-artifact` | TS JS PY RS | Comment or string containing a phrase from the ported agent-artifact list, case-insensitive, on word boundaries. |
 | `comment/untracked-todo` | TS JS PY RS | Comment containing `\b(TODO\|FIXME\|HACK\|XXX)\b` (case-sensitive) and no match of `todo_issue_pattern`. |

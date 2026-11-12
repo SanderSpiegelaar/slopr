@@ -66,7 +66,7 @@ static NARRATIVE: LazyLock<AhoCorasick> = LazyLock::new(|| phrase_matcher(phrase
 static AGENT_ARTIFACT: LazyLock<AhoCorasick> =
     LazyLock::new(|| phrase_matcher(phrases::AGENT_ARTIFACT));
 static DIVIDER_TITLE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^[=\-*#~_]{3,}\s+.+?\s+[=\-*#~_]{3,}$").expect("valid divider regex")
+    Regex::new(r"^([=\-*#~_]{3,})\s+.+?\s+([=\-*#~_]{3,})$").expect("valid divider regex")
 });
 static STEP: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)^(step|phase|stage)\s+\d+\b").expect("valid step regex"));
@@ -141,13 +141,18 @@ fn untracked_todo(file: &SourceFile, settings: &RuleSettings, hits: &mut Vec<Hit
     }
 }
 
-/// `^([=\-*#~_])\1{3,}` without a backreference, which `regex` lacks, or a titled divider.
+/// `^([=\-*#~_])\1{3,}`, or a title between two single-character runs, without the
+/// backreferences `regex` lacks. Single-character runs keep `-*- coding: utf-8 -*-` out.
 fn is_divider(text: &str) -> bool {
     let bytes = text.as_bytes();
     let repeated = bytes.len() >= 4
         && b"=-*#~_".contains(&bytes[0])
         && bytes[1..4].iter().all(|&b| b == bytes[0]);
-    repeated || DIVIDER_TITLE.is_match(text)
+    let run = |s: &str| s.bytes().all(|b| b == s.as_bytes()[0]);
+    repeated
+        || DIVIDER_TITLE
+            .captures(text)
+            .is_some_and(|c| run(&c[1]) && run(&c[2]))
 }
 
 fn phrase_matcher(patterns: &[&str]) -> AhoCorasick {
