@@ -30,7 +30,7 @@ slopr/
       types.rs
       text.rs          invisible unicode, secrets
       phrases.rs       phrase lists, each list cites its source and license
-    fallow.rs          locate, version check, run, SARIF to Finding
+    fallow.rs          locate, version check, run, JSON to Finding
     diff.rs            git diff --unified=0 parsing for --changed-since and --staged
     suppress.rs        inline directives and baseline file
     report/
