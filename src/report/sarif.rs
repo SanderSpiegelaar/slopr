@@ -1,6 +1,9 @@
+use std::collections::BTreeSet;
+
 use serde::Serialize;
 
-use crate::finding::{Finding, Severity, Span};
+use crate::fallow::Outcome;
+use crate::finding::{Finding, Origin, Severity, Span};
 use crate::report::native_rules;
 use crate::suppress;
 
@@ -9,33 +12,36 @@ struct Log<'a> {
     #[serde(rename = "$schema")]
     schema: &'static str,
     version: &'static str,
-    runs: [Run<'a>; 1],
+    runs: Vec<Run<'a>>,
 }
 
 #[derive(Serialize)]
 struct Run<'a> {
-    tool: Tool,
+    tool: Tool<'a>,
     results: Vec<SarifResult<'a>>,
 }
 
 #[derive(Serialize)]
-struct Tool {
-    driver: Driver,
+struct Tool<'a> {
+    driver: Driver<'a>,
 }
 
 #[derive(Serialize)]
-struct Driver {
+struct Driver<'a> {
     name: &'static str,
-    version: &'static str,
-    rules: Vec<RuleDescriptor>,
+    version: &'a str,
+    rules: Vec<RuleDescriptor<'a>>,
 }
 
+/// fallow's rules carry only an `id`.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct RuleDescriptor {
-    id: &'static str,
-    short_description: Text<'static>,
-    default_configuration: Configuration,
+struct RuleDescriptor<'a> {
+    id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    short_description: Option<Text<'a>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_configuration: Option<Configuration>,
 }
 
 #[derive(Serialize)]
@@ -122,42 +128,66 @@ impl From<Span> for Region {
     }
 }
 
-/// A SARIF 2.1.0 log with slopr's run, pretty-printed with a trailing newline.
-pub fn render_sarif(findings: &[Finding]) -> String {
+/// A SARIF 2.1.0 log with slopr's run, then fallow's run when fallow ran, pretty-printed with a
+/// trailing newline. Expects findings in report order.
+pub fn render_sarif(findings: &[Finding], fallow: Outcome<'_>) -> String {
+    let (native, from_fallow): (Vec<&Finding>, Vec<&Finding>) = findings
+        .iter()
+        .partition(|f| matches!(f.origin, Origin::Native));
     let mut rules: Vec<RuleDescriptor> = native_rules()
         .into_iter()
         .map(|rule| RuleDescriptor {
             id: rule.id,
-            short_description: Text { text: rule.summary },
-            default_configuration: Configuration {
+            short_description: Some(Text { text: rule.summary }),
+            default_configuration: Some(Configuration {
                 level: rule.default_severity.into(),
-            },
+            }),
         })
         .collect();
     rules.push(RuleDescriptor {
         id: suppress::INVALID_DIRECTIVE,
-        short_description: Text {
+        short_description: Some(Text {
             text: suppress::INVALID_DIRECTIVE_SUMMARY,
-        },
-        default_configuration: Configuration {
+        }),
+        default_configuration: Some(Configuration {
             level: Level::Warning,
-        },
+        }),
     });
     rules.sort_unstable_by_key(|rule| rule.id);
-    let results = findings.iter().map(result).collect();
+    let mut runs = vec![Run {
+        tool: Tool {
+            driver: Driver {
+                name: "slopr",
+                version: env!("CARGO_PKG_VERSION"),
+                rules,
+            },
+        },
+        results: native.into_iter().map(result).collect(),
+    }];
+    if let Outcome::Ok(version) = fallow {
+        let ids: BTreeSet<&str> = from_fallow.iter().map(|f| f.rule.as_str()).collect();
+        runs.push(Run {
+            tool: Tool {
+                driver: Driver {
+                    name: "fallow",
+                    version,
+                    rules: ids
+                        .into_iter()
+                        .map(|id| RuleDescriptor {
+                            id,
+                            short_description: None,
+                            default_configuration: None,
+                        })
+                        .collect(),
+                },
+            },
+            results: from_fallow.into_iter().map(result).collect(),
+        });
+    }
     let log = Log {
         schema: "https://json.schemastore.org/sarif-2.1.0.json",
         version: "2.1.0",
-        runs: [Run {
-            tool: Tool {
-                driver: Driver {
-                    name: "slopr",
-                    version: env!("CARGO_PKG_VERSION"),
-                    rules,
-                },
-            },
-            results,
-        }],
+        runs,
     };
     let mut out = serde_json::to_string_pretty(&log).expect("the SARIF log serializes");
     out.push('\n');

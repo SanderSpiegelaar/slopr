@@ -3,9 +3,12 @@ name: CI
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
   test:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,3 +18,14 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+
+  fallow-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g fallow@${{ github.event_name == 'schedule' && 'latest' || '3.42.0' }}
+      - run: FALLOW_BIN=$(command -v fallow) cargo test --test fallow_contract

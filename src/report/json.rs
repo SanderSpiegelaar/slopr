@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+use crate::fallow::Outcome;
 use crate::finding::Finding;
 use crate::report::Summary;
 
@@ -12,18 +13,23 @@ struct Report<'a> {
     version: &'static str,
     findings: &'a [Finding],
     summary: Summary<'a>,
-    tools: [Tool; 1],
+    tools: [Tool<'a>; 1],
 }
 
 #[derive(Serialize)]
-struct Tool {
+struct Tool<'a> {
     name: &'static str,
-    version: Option<String>,
+    version: Option<&'a str>,
     status: &'static str,
 }
 
 /// The json report, pretty-printed with a trailing newline. Expects findings in report order.
-pub fn render_json(findings: &[Finding]) -> String {
+pub fn render_json(findings: &[Finding], fallow: Outcome<'_>) -> String {
+    let (version, status) = match fallow {
+        Outcome::Skipped => (None, "skipped"),
+        Outcome::Ok(version) => (Some(version), "ok"),
+        Outcome::Failed(version) => (Some(version), "failed"),
+    };
     let report = Report {
         schema_version: SCHEMA_VERSION,
         version: env!("CARGO_PKG_VERSION"),
@@ -31,8 +37,8 @@ pub fn render_json(findings: &[Finding]) -> String {
         summary: Summary::of(findings),
         tools: [Tool {
             name: "fallow",
-            version: None,
-            status: "skipped",
+            version,
+            status,
         }],
     };
     let mut out = serde_json::to_string_pretty(&report).expect("the report serializes");

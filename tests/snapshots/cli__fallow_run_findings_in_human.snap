@@ -1,0 +1,31 @@
+---
+source: tests/cli.rs
+expression: stdout(&output)
+---
+src/complex.ts:1:8 error fallow/high-crap-score Function has a high CRAP score (complexity combined with low coverage): classify, cyclomatic 18, cognitive 49, CRAP 342.0
+
+src/cycle-a.ts:1:10 error fallow/circular-dependency Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 1 of 2)
+
+src/cycle-b.ts:1:10 error fallow/circular-dependency Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 2 of 2)
+
+src/index.ts:8:8 error fallow/unlisted-dependency Dependency used but not in package.json: lodash
+src/index.ts:10:1 warn debug/leftover `console.log` left in library code
+
+src/invoices.ts:7:8 error fallow/high-crap-score Function has a high CRAP score (complexity combined with low coverage): invoiceTotal, cyclomatic 5, cognitive 5, CRAP 30.0
+src/invoices.ts:7:30 warn fallow/code-duplication Duplicated code block: 14 lines, 2 instances (location 1 of 2)
+
+src/orders.ts:7:8 error fallow/high-crap-score Function has a high CRAP score (complexity combined with low coverage): orderTotal, cyclomatic 5, cognitive 5, CRAP 30.0
+src/orders.ts:7:28 warn fallow/code-duplication Duplicated code block: 14 lines, 2 instances (location 2 of 2)
+
+src/utils.ts:2:10 warn ts/unsafe-assertion `as any` assertion
+src/utils.ts:5:14 error fallow/unused-export Export is never imported: unusedHelper
+src/utils.ts:7:24 error fallow/unused-export Export is never imported: uni
+
+1 debug/leftover
+2 fallow/circular-dependency
+2 fallow/code-duplication
+3 fallow/high-crap-score
+1 fallow/unlisted-dependency
+2 fallow/unused-export
+1 ts/unsafe-assertion
+12 findings (8 error, 4 warn, 0 info)
