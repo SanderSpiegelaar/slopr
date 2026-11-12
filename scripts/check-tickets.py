@@ -36,9 +36,11 @@ def parse_ticket(path):
         if value.startswith("[") and value.endswith("]"):
             value = [v.strip() for v in value[1:-1].split(",") if v.strip()]
         meta[key.strip()] = value
-    for key in REQUIRED:
-        if key not in meta:
-            errors.append(f"{path.name}: missing '{key}'")
+    missing = [key for key in REQUIRED if key not in meta]
+    for key in missing:
+        errors.append(f"{path.name}: missing '{key}'")
+    if missing:
+        return None
     positions = [m.group(2).find("\n" + s + "\n") for s in SECTIONS]
     if -1 in positions or positions != sorted(positions):
         errors.append(f"{path.name}: body needs {', '.join(SECTIONS)} in that order")
