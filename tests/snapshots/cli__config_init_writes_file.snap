@@ -1,0 +1,30 @@
+---
+source: tests/cli.rs
+expression: written
+---
+exclude = []
+
+[rules]
+"comment/narrative" = "warn"
+"comment/section-divider" = "warn"
+"comment/step-numbered" = "warn"
+"comment/agent-artifact" = "error"
+"comment/untracked-todo" = "info"
+"error/swallowed" = "error"
+"error/redundant-rethrow" = "warn"
+"stub/placeholder-body" = "warn"
+"test/tautological" = "error"
+"debug/leftover" = "warn"
+"text/invisible-unicode" = "error"
+"sec/hardcoded-secret" = "error"
+"ts/unsafe-assertion" = "warn"
+
+[rules.settings."comment/untracked-todo"]
+issue_pattern = '(#\d+|[A-Z]+-\d+|https?://)'
+
+[fallow]
+enabled = "auto"
+bin = ""
+version = ">=3.42, <4"
+commands = ["dead-code", "dupes", "health"]
+args = []

@@ -69,7 +69,7 @@ Changed lines are the new-side line ranges of each hunk. A deletion-only hunk ad
 
 Only changed files are scanned. A finding is kept when its span intersects a changed line. A file-level finding, one whose span covers the whole file, is kept when the file has any changed line.
 
-fallow in diff mode runs `fallow audit --base <base> --format json --quiet` in place of the full-scan commands. `<base>` is the merge base, or `HEAD` for `--staged`. Its findings are not line-filtered.
+fallow in diff mode runs `fallow audit --base <base> --only <L> --format json --quiet` in place of the full-scan commands, with `<L>` as in [fallow](fallow.md) step 4. `<base>` is the merge base, or `HEAD` for `--staged`. Its findings are not line-filtered.
 
 The `pr/*` rules run only in diff mode. Their findings use the changed file with the most added lines, ties broken by path order, with a span on that file's first changed line.
 

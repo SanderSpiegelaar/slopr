@@ -1,0 +1,2 @@
+[rules.settings."comment/untracked-todo"]
+issue_pattern = '('
