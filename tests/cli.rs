@@ -407,3 +407,131 @@ tests/fixtures/suppress/mention-mid-line.ts:8:18 warn ts/unsafe-assertion `as an
 ",
     );
 }
+
+const JS_MIN: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/repos/js-min");
+const FAKE_FALLOW: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/tests/fixtures/fake-fallow/fallow"
+);
+
+fn fallow_unsatisfied(found: &str) -> String {
+    format!(
+        "slopr: fallow {found} does not satisfy >=3.42, <4. Install it with: npm install -D fallow@^3.42 (or cargo install fallow-cli --version ^3.42). Use --fallow off to skip.\n"
+    )
+}
+
+/// `slopr check <args>` in `dir`, with an empty PATH dir so a real fallow never answers.
+fn fallow_check(test: &str, dir: &std::path::Path, args: &[&str]) -> assert_cmd::assert::Assert {
+    cargo_bin_cmd!("slopr")
+        .current_dir(dir)
+        .env("PATH", empty_dir(&format!("{test}_path")))
+        .arg("check")
+        .args(args)
+        .assert()
+}
+
+/// A temp dir with a `package.json` and one clean source file.
+fn js_dir(name: &str) -> std::path::PathBuf {
+    let dir = empty_dir(name);
+    for file in ["package.json", "index.js"] {
+        std::fs::copy(format!("{JS_MIN}/{file}"), dir.join(file)).expect("fixture is copied");
+    }
+    dir
+}
+
+#[test]
+fn fallow_check_missing_exits_3() {
+    fallow_check("fallow_check_missing_exits_3", JS_MIN.as_ref(), &[])
+        .code(3)
+        .stdout("")
+        .stderr(fallow_unsatisfied("not found"));
+}
+
+#[test]
+fn fallow_check_out_of_range_exits_3() {
+    cargo_bin_cmd!("slopr")
+        .current_dir(JS_MIN)
+        .env("PATH", empty_dir("fallow_check_out_of_range_exits_3_path"))
+        .env("FAKE_FALLOW_VERSION", "3.41.0")
+        .args(["check", "--fallow-bin", FAKE_FALLOW])
+        .assert()
+        .code(3)
+        .stdout("")
+        .stderr(fallow_unsatisfied("3.41.0"));
+}
+
+#[test]
+fn fallow_check_in_range_passes() {
+    fallow_check(
+        "fallow_check_in_range_passes",
+        JS_MIN.as_ref(),
+        &["--fallow-bin", FAKE_FALLOW],
+    )
+    .code(0)
+    .stdout("0 findings\n");
+}
+
+#[test]
+fn fallow_check_off_skips() {
+    fallow_check(
+        "fallow_check_off_skips",
+        JS_MIN.as_ref(),
+        &["--fallow", "off"],
+    )
+    .code(0)
+    .stdout("0 findings\n");
+}
+
+#[test]
+fn fallow_check_auto_without_package_json_skips() {
+    let dir = empty_dir("fallow_check_auto_without_package_json_skips");
+    std::fs::copy(format!("{JS_MIN}/index.js"), dir.join("index.js")).expect("fixture is copied");
+    fallow_check("fallow_check_auto_without_package_json_skips", &dir, &[])
+        .code(0)
+        .stdout("0 findings\n");
+}
+
+#[test]
+fn fallow_check_auto_finds_nested_package_json() {
+    fallow_check(
+        "fallow_check_auto_finds_nested_package_json",
+        env!("CARGO_MANIFEST_DIR").as_ref(),
+        &["tests/fixtures/repos"],
+    )
+    .code(3)
+    .stdout("")
+    .stderr(fallow_unsatisfied("not found"));
+}
+
+#[test]
+fn fallow_check_bin_flag_wins() {
+    let dir = js_dir("fallow_check_bin_flag_wins");
+    std::fs::write(
+        dir.join("slopr.toml"),
+        "[fallow]\nbin = \"missing/fallow\"\n",
+    )
+    .expect("slopr.toml is written");
+    fallow_check("fallow_check_bin_flag_wins", &dir, &[])
+        .code(3)
+        .stdout("")
+        .stderr(fallow_unsatisfied("not found"));
+    fallow_check(
+        "fallow_check_bin_flag_wins",
+        &dir,
+        &["--fallow-bin", FAKE_FALLOW],
+    )
+    .code(0)
+    .stdout("0 findings\n");
+}
+
+#[test]
+fn fallow_check_node_modules_bin_found() {
+    let dir = js_dir("fallow_check_node_modules_bin_found");
+    let bin = dir.join("node_modules/.bin");
+    std::fs::create_dir_all(&bin).expect("node_modules/.bin is created");
+    // fs::copy keeps the executable bit.
+    std::fs::copy(FAKE_FALLOW, bin.join("fallow")).expect("fake fallow is copied");
+    fallow_check("fallow_check_node_modules_bin_found", &dir, &[])
+        .code(0)
+        .stdout("0 findings\n");
+}

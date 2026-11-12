@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use crate::finding::{Finding, Severity};
 
 mod config;
+mod fallow;
 mod finding;
 mod report;
 mod rules;
@@ -32,6 +33,10 @@ enum Command {
         format: Format,
         #[arg(long, value_enum, value_name = "LEVEL", default_value_t = Severity::Error)]
         max_severity_exit: Severity,
+        #[arg(long, value_enum, value_name = "MODE")]
+        fallow: Option<FallowFlag>,
+        #[arg(long, value_name = "PATH")]
+        fallow_bin: Option<PathBuf>,
     },
     /// List native rules
     Rules,
@@ -44,6 +49,23 @@ enum Format {
     Human,
     Json,
     Sarif,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum FallowFlag {
+    Auto,
+    On,
+    Off,
+}
+
+impl From<FallowFlag> for config::FallowMode {
+    fn from(flag: FallowFlag) -> Self {
+        match flag {
+            FallowFlag::Auto => Self::Auto,
+            FallowFlag::On => Self::On,
+            FallowFlag::Off => Self::Off,
+        }
+    }
 }
 
 impl ValueEnum for Severity {
@@ -76,7 +98,22 @@ fn run(cli: Cli) -> anyhow::Result<ExitCode> {
             paths,
             format,
             max_severity_exit,
-        } => check(&paths, format, max_severity_exit),
+            fallow,
+            fallow_bin,
+        } => {
+            let mut config = config::load()?;
+            if let Some(mode) = fallow {
+                config.fallow.enabled = mode.into();
+            }
+            if fallow_bin.is_some() {
+                config.fallow.bin = fallow_bin;
+            }
+            if let Err(err) = fallow::check(&config.fallow, &paths) {
+                eprintln!("slopr: {err}");
+                return Ok(ExitCode::from(3));
+            }
+            check(&config, &paths, format, max_severity_exit)
+        }
         Command::Rules => {
             io::stdout().write_all(report::render_rules().as_bytes())?;
             Ok(ExitCode::SUCCESS)
@@ -85,8 +122,12 @@ fn run(cli: Cli) -> anyhow::Result<ExitCode> {
     }
 }
 
-fn check(paths: &[PathBuf], format: Format, gate: Severity) -> anyhow::Result<ExitCode> {
-    let config = config::load()?;
+fn check(
+    config: &config::Config,
+    paths: &[PathBuf],
+    format: Format,
+    gate: Severity,
+) -> anyhow::Result<ExitCode> {
     let files = walk::files(paths, &config.exclude)?;
     let mut findings = rules::run_rules(&files, config.settings());
     findings.retain_mut(|finding| {
