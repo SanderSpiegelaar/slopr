@@ -57,6 +57,25 @@ The first run is slopr's. When fallow ran, a second run holds its findings.
 - The fallow run's `tool.driver` has `name: "fallow"`, the version slopr detected, and `rules` with one `{"id"}` per fallow rule that has a result, sorted by id. Its results have the same shape as slopr's, with `ruleId` `fallow/<id>`.
 - fallow findings appear only in the fallow run, never in slopr's run.
 
+## Diff mode
+
+`--changed-since` and `--staged` put `slopr check` in diff mode.
+
+- `--changed-since <REF>` diffs the working tree against `git merge-base <REF> HEAD`, via `git diff --unified=0 --no-color --no-ext-diff -M <base>`. Untracked files that are not ignored (`git ls-files --others --exclude-standard`) count as fully changed.
+- `--staged` uses `git diff --cached --unified=0 --no-color --no-ext-diff -M`. Rules read the working-tree content of each file, because the pre-commit framework stashes unstaged changes first.
+- Passing both flags, or either one outside a git work tree, exits 2.
+
+Changed lines are the new-side line ranges of each hunk. A deletion-only hunk adds none. A renamed file uses its new path.
+
+Only changed files are scanned. A finding is kept when its span intersects a changed line. A file-level finding, one whose span covers the whole file, is kept when the file has any changed line.
+
+fallow in diff mode runs `fallow audit --base <base> --format json --quiet` in place of the full-scan commands. `<base>` is the merge base, or `HEAD` for `--staged`. Its findings are not line-filtered.
+
+The `pr/*` rules run only in diff mode. Their findings use the changed file with the most added lines, ties broken by path order, with a span on that file's first changed line.
+
+- `pr/no-tests-changed` fires when the added lines in parsed non-test files reach `pr_min_added_lines` and no changed file is a test file.
+- `pr/oversized-diff` fires when added lines exceed `pr_max_added_lines` or changed files exceed `pr_max_files`.
+
 ## CI and coding-agent integration
 
 - GitHub Actions: `slopr check --format sarif > slopr.sarif` then `github/codeql-action/upload-sarif`. Gate step: `slopr check --changed-since origin/${{ github.base_ref }}`.
