@@ -32,3 +32,8 @@ Approved by Sander on 2026-11-12.
 - Full tickets through v1. v2 items are epics.
 - Gap tickets apply the documented default. Tickets marked `signoff: user` need Sander's approval on the PR.
 - `slopr init` and `slopr rules` ship in v0. `slopr explain` and the release files (`LICENSE-MIT`, `LICENSE-APACHE`, `THIRD_PARTY_NOTICES.md`) ship in v1. Renaming slopr stays open until publishing.
+
+## Core types (2026-11-12)
+
+- FNV-1a replaces sha256 for the fingerprint. It needs no new crate and its output is stable.
+- `via_fallow_for_js` is removed, because no v0 or v1 rule needs it and `langs` already says it.

@@ -60,7 +60,7 @@ Done when:
 - Comment heuristics produce false positives and annoy users. Mitigation: FP corpus gate, `comment/obvious` off by default, every finding suppressible with a reason.
 - fallow moves fast (five releases in ten days). Mitigation: rely only on semver-covered surfaces, pin a range, weekly contract test against latest.
 - fallow missing or out of range on the machine (users install it separately, per the 2026-11-11 decision). Mitigation: the startup version check in [fallow behavior](reference/fallow.md#behavior) step 3.
-- Double reporting between native rules and fallow. Mitigation: `via_fallow_for_js` flag in the rule table.
+- Double reporting between native rules and fallow. Mitigation: rules that fallow covers for JS/TS leave those languages out of `langs`.
 - tree-sitter grammar crates need a C compiler and lag tree-sitter core releases. Mitigation: phase 0 build check; keep the grammar list short.
 - License contamination. Mitigation: no code from slopo (AGPL), vibecheck (FSL), slop-guard (no license) or aicomplex (no LICENSE file); phrase lists only from MIT or Apache-2.0 sources with provenance comments in `phrases.rs`.
 - Phrase lists are English-centric. stop-ai-slop has ru, de, fr, es lists under MIT that can be ported later.
