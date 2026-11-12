@@ -1,0 +1,291 @@
+---
+source: tests/cli.rs
+expression: "serde_json::to_string_pretty(&runs[1]).expect(\"run serializes\")"
+---
+{
+  "results": [
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/complex.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 8,
+              "endLine": 1,
+              "startColumn": 8,
+              "startLine": 1
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Function has a high CRAP score (complexity combined with low coverage): classify, cyclomatic 18, cognitive 49, CRAP 342.0"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "21cea8e98da06a65"
+      },
+      "ruleId": "fallow/high-crap-score"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/cycle-a.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 10,
+              "endLine": 1,
+              "startColumn": 10,
+              "startLine": 1
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 1 of 2)"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "58284e728196fe30"
+      },
+      "ruleId": "fallow/circular-dependency"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/cycle-b.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 10,
+              "endLine": 1,
+              "startColumn": 10,
+              "startLine": 1
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 2 of 2)"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "a54f337260a36b21"
+      },
+      "ruleId": "fallow/circular-dependency"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/index.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 8,
+              "endLine": 8,
+              "startColumn": 8,
+              "startLine": 8
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Dependency used but not in package.json: lodash"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "e5fd42adc7d42a11"
+      },
+      "ruleId": "fallow/unlisted-dependency"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/invoices.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 8,
+              "endLine": 7,
+              "startColumn": 8,
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Function has a high CRAP score (complexity combined with low coverage): invoiceTotal, cyclomatic 5, cognitive 5, CRAP 30.0"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "f4c3660633f0dba2"
+      },
+      "ruleId": "fallow/high-crap-score"
+    },
+    {
+      "level": "warning",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/invoices.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 32,
+              "endLine": 20,
+              "startColumn": 30,
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicated code block: 14 lines, 2 instances (location 1 of 2)"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "3e3894a633657da6"
+      },
+      "ruleId": "fallow/code-duplication"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/orders.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 8,
+              "endLine": 7,
+              "startColumn": 8,
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Function has a high CRAP score (complexity combined with low coverage): orderTotal, cyclomatic 5, cognitive 5, CRAP 30.0"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "d3da61d94d3f14a2"
+      },
+      "ruleId": "fallow/high-crap-score"
+    },
+    {
+      "level": "warning",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/orders.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 32,
+              "endLine": 20,
+              "startColumn": 28,
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Duplicated code block: 14 lines, 2 instances (location 2 of 2)"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "1e728dedad316f86"
+      },
+      "ruleId": "fallow/code-duplication"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/utils.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 14,
+              "endLine": 5,
+              "startColumn": 14,
+              "startLine": 5
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Export is never imported: unusedHelper"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "989b23f291c0cb77"
+      },
+      "ruleId": "fallow/unused-export"
+    },
+    {
+      "level": "error",
+      "locations": [
+        {
+          "physicalLocation": {
+            "artifactLocation": {
+              "uri": "src/utils.ts",
+              "uriBaseId": "%SRCROOT%"
+            },
+            "region": {
+              "endColumn": 24,
+              "endLine": 7,
+              "startColumn": 24,
+              "startLine": 7
+            }
+          }
+        }
+      ],
+      "message": {
+        "text": "Export is never imported: uni"
+      },
+      "partialFingerprints": {
+        "slopr/v1": "fb263da5aa9ca25d"
+      },
+      "ruleId": "fallow/unused-export"
+    }
+  ],
+  "tool": {
+    "driver": {
+      "name": "fallow",
+      "rules": [
+        {
+          "id": "fallow/circular-dependency"
+        },
+        {
+          "id": "fallow/code-duplication"
+        },
+        {
+          "id": "fallow/high-crap-score"
+        },
+        {
+          "id": "fallow/unlisted-dependency"
+        },
+        {
+          "id": "fallow/unused-export"
+        }
+      ],
+      "version": "3.42.0"
+    }
+  }
+}

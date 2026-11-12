@@ -1,6 +1,8 @@
 use std::io::{self, Write};
+use std::panic;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::thread;
 
 use clap::builder::PossibleValue;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -108,11 +110,14 @@ fn run(cli: Cli) -> anyhow::Result<ExitCode> {
             if fallow_bin.is_some() {
                 config.fallow.bin = fallow_bin;
             }
-            if let Err(err) = fallow::check(&config.fallow, &paths) {
-                eprintln!("slopr: {err}");
-                return Ok(ExitCode::from(3));
-            }
-            check(&config, &paths, format, max_severity_exit)
+            let bin = match fallow::check(&config.fallow, &paths) {
+                Ok(bin) => bin,
+                Err(err) => {
+                    eprintln!("slopr: {err}");
+                    return Ok(ExitCode::from(3));
+                }
+            };
+            check(&config, &paths, bin.as_ref(), format, max_severity_exit)
         }
         Command::Rules => {
             io::stdout().write_all(report::render_rules().as_bytes())?;
@@ -122,14 +127,61 @@ fn run(cli: Cli) -> anyhow::Result<ExitCode> {
     }
 }
 
+/// Runs fallow on its own thread while native rules run, and exits 3 after the report when
+/// fallow failed.
 fn check(
     config: &config::Config,
     paths: &[PathBuf],
+    fallow: Option<&fallow::Bin>,
     format: Format,
     gate: Severity,
 ) -> anyhow::Result<ExitCode> {
-    let files = walk::files(paths, &config.exclude)?;
-    let mut findings = rules::run_rules(&files, config.settings());
+    let (files, mut findings, ran) = thread::scope(|scope| {
+        let ran = fallow.map(|bin| {
+            let handle = scope.spawn(|| fallow::run(bin, &config.fallow, paths));
+            (bin, handle)
+        });
+        let files = walk::files(paths, &config.exclude)?;
+        let findings = native_findings(config, &files);
+        let ran = ran.map(|(bin, handle)| {
+            let result = handle
+                .join()
+                .unwrap_or_else(|panic| panic::resume_unwind(panic));
+            (bin, result)
+        });
+        anyhow::Ok((files, findings, ran))
+    })?;
+    let (outcome, failure) = match ran {
+        None => (fallow::Outcome::Skipped, None),
+        Some((bin, Ok(found))) => {
+            findings.extend(found);
+            (fallow::Outcome::Ok(&bin.version), None)
+        }
+        Some((bin, Err(err))) => (fallow::Outcome::Failed(&bin.version), Some(err)),
+    };
+    suppress::apply(&files, &mut findings);
+    findings.sort_by(|a, b| report_order(a).cmp(&report_order(b)));
+    let out = match format {
+        Format::Human => report::render_human(&findings),
+        Format::Json => report::render_json(&findings, outcome),
+        Format::Sarif => report::render_sarif(&findings, outcome),
+    };
+    io::stdout().write_all(out.as_bytes())?;
+    if let Some(err) = failure {
+        eprintln!("slopr: {err}");
+        return Ok(ExitCode::from(3));
+    }
+    let gate_failed = findings.iter().any(|f| f.severity >= gate);
+    Ok(if gate_failed {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    })
+}
+
+/// Native findings at their configured severity, without those turned off.
+fn native_findings(config: &config::Config, files: &[source::SourceFile]) -> Vec<Finding> {
+    let mut findings = rules::run_rules(files, config.settings());
     findings.retain_mut(|finding| {
         let rule = config::native_rule(&finding.rule).expect("findings come from native rules");
         let Some(severity) = config.severity(rule, &finding.path) else {
@@ -138,20 +190,7 @@ fn check(
         finding.severity = severity;
         true
     });
-    suppress::apply(&files, &mut findings);
-    findings.sort_by(|a, b| report_order(a).cmp(&report_order(b)));
-    let out = match format {
-        Format::Human => report::render_human(&findings),
-        Format::Json => report::render_json(&findings),
-        Format::Sarif => report::render_sarif(&findings),
-    };
-    io::stdout().write_all(out.as_bytes())?;
-    let gate_failed = findings.iter().any(|f| f.severity >= gate);
-    Ok(if gate_failed {
-        ExitCode::FAILURE
-    } else {
-        ExitCode::SUCCESS
-    })
+    findings
 }
 
 fn report_order(f: &Finding) -> (&[u8], u32, u32, &str, &str) {

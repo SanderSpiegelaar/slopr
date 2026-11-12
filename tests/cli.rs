@@ -535,3 +535,155 @@ fn fallow_check_node_modules_bin_found() {
         .code(0)
         .stdout("0 findings\n");
 }
+
+const FAKE_FALLOW_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/fake-fallow");
+const FAKE_FALLOW_REPO: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/tests/fixtures/fake-fallow/repo"
+);
+
+/// `slopr check <args>` in the planted repo, with fake fallow printing the canned envelopes and
+/// exiting with `exit`.
+fn fallow_run(exit: &str, args: &[&str]) -> std::process::Output {
+    cargo_bin_cmd!("slopr")
+        .current_dir(FAKE_FALLOW_REPO)
+        .env("FAKE_FALLOW_DIR", FAKE_FALLOW_DIR)
+        .env("FAKE_FALLOW_EXIT", exit)
+        .args(["check", "--fallow-bin", FAKE_FALLOW])
+        .args(args)
+        .output()
+        .expect("slopr runs")
+}
+
+fn json(output: &std::process::Output) -> serde_json::Value {
+    serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+}
+
+#[test]
+fn fallow_run_findings_in_human() {
+    let output = fallow_run("0", &[]);
+    assert_eq!(output.status.code(), Some(1));
+    insta::assert_snapshot!(stdout(&output));
+}
+
+#[test]
+fn fallow_run_sarif_fallow_run() {
+    let output = fallow_run("1", &["--format", "sarif"]);
+    assert_eq!(output.status.code(), Some(1));
+    let log = json(&output);
+    let runs = log["runs"].as_array().expect("runs is an array");
+    assert_eq!(runs.len(), 2);
+    let rule_ids = |run: &serde_json::Value| -> Vec<String> {
+        run["results"]
+            .as_array()
+            .expect("results is an array")
+            .iter()
+            .map(|r| r["ruleId"].as_str().expect("ruleId is a string").to_owned())
+            .collect()
+    };
+    let slopr = rule_ids(&runs[0]);
+    assert!(!slopr.is_empty());
+    assert!(
+        slopr.iter().all(|id| !id.starts_with("fallow/")),
+        "{slopr:?}"
+    );
+    let mut fallow = rule_ids(&runs[1]);
+    assert!(
+        fallow.iter().all(|id| id.starts_with("fallow/")),
+        "{fallow:?}"
+    );
+    fallow.sort();
+    fallow.dedup();
+    let declared: Vec<&str> = runs[1]["tool"]["driver"]["rules"]
+        .as_array()
+        .expect("driver rules is an array")
+        .iter()
+        .map(|rule| rule["id"].as_str().expect("rule id is a string"))
+        .collect();
+    assert_eq!(declared, fallow);
+    insta::assert_snapshot!(serde_json::to_string_pretty(&runs[1]).expect("run serializes"));
+}
+
+#[test]
+fn fallow_run_json_tools_ok() {
+    let output = fallow_run("0", &["--format", "json"]);
+    assert_eq!(output.status.code(), Some(1));
+    let report = json(&output);
+    assert_eq!(
+        report["tools"],
+        serde_json::json!([{"name": "fallow", "version": "3.42.0", "status": "ok"}])
+    );
+    let origins: std::collections::BTreeMap<&str, &serde_json::Value> = report["findings"]
+        .as_array()
+        .expect("findings is an array")
+        .iter()
+        .map(|f| (f["rule"].as_str().expect("rule is a string"), &f["origin"]))
+        .collect();
+    let fallow = |command: &str| serde_json::json!({"kind": "fallow", "version": "3.42.0", "command": command});
+    assert_eq!(*origins["fallow/unused-export"], fallow("dead-code"));
+    assert_eq!(*origins["fallow/code-duplication"], fallow("dupes"));
+    assert_eq!(*origins["fallow/high-crap-score"], fallow("health"));
+    assert_eq!(
+        *origins["ts/unsafe-assertion"],
+        serde_json::json!({"kind": "native"})
+    );
+}
+
+#[test]
+fn fallow_run_exit_2_is_tool_failure() {
+    let output = fallow_run("2", &[]);
+    assert_eq!(output.status.code(), Some(3));
+    assert_eq!(
+        stdout(&output),
+        "src/index.ts:10:1 warn debug/leftover `console.log` left in library code
+
+src/utils.ts:2:10 warn ts/unsafe-assertion `as any` assertion
+
+1 debug/leftover
+1 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)
+"
+    );
+    assert_eq!(
+        String::from_utf8(output.stderr).expect("stderr is UTF-8"),
+        "slopr: fallow --only dead-code,dupes,health --format json --quiet failed: exit status: 2\n"
+    );
+    let report = json(&fallow_run("2", &["--format", "json"]));
+    assert_eq!(report["tools"][0]["status"], "failed");
+}
+
+#[test]
+fn fallow_run_multi_location_split() {
+    let output = fallow_run("0", &[]);
+    let cycle: Vec<&str> = stdout(&output)
+        .lines()
+        .filter(|line| line.contains(" fallow/circular-dependency "))
+        .collect();
+    assert_eq!(
+        cycle,
+        [
+            "src/cycle-a.ts:1:10 error fallow/circular-dependency Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 1 of 2)",
+            "src/cycle-b.ts:1:10 error fallow/circular-dependency Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 2 of 2)",
+        ]
+    );
+}
+
+#[test]
+fn fallow_run_paths_filter() {
+    let output = fallow_run("0", &["src/utils.ts", "src/cycle-b.ts"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        stdout(&output),
+        "src/cycle-b.ts:1:10 error fallow/circular-dependency Circular dependency chain detected: src/cycle-a.ts, src/cycle-b.ts (location 2 of 2)
+
+src/utils.ts:2:10 warn ts/unsafe-assertion `as any` assertion
+src/utils.ts:5:14 error fallow/unused-export Export is never imported: unusedHelper
+src/utils.ts:7:24 error fallow/unused-export Export is never imported: uni
+
+1 fallow/circular-dependency
+2 fallow/unused-export
+1 ts/unsafe-assertion
+4 findings (3 error, 1 warn, 0 info)
+"
+    );
+}
