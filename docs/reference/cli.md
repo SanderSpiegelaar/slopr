@@ -49,12 +49,13 @@ Each finding is the `Finding` struct. `span` is an object. `origin` is `{"kind":
 {"$schema": "https://json.schemastore.org/sarif-2.1.0.json", "version": "2.1.0", "runs": [...]}
 ```
 
-The first run is slopr's. fallow's runs are appended after it.
+The first run is slopr's. When fallow ran, a second run holds its findings.
 
 - `tool.driver` has `name: "slopr"`, `version` and `rules`. `rules` lists every native rule plus `suppress/invalid-directive`, sorted by id. Each rule has `id`, `shortDescription.text` (its summary) and `defaultConfiguration.level`.
 - Each result has `ruleId`, `level`, `message.text`, one location and `partialFingerprints: {"slopr/v1": fingerprint}`. `level` maps error to `error`, warn to `warning` and info to `note`.
 - The location has `artifactLocation.uri` (the path), `uriBaseId: "%SRCROOT%"`, and a `region` with all four span fields.
-- fallow findings appear only in fallow's appended runs, never in slopr's run.
+- The fallow run's `tool.driver` has `name: "fallow"`, the version slopr detected, and `rules` with one `{"id"}` per fallow rule that has a result, sorted by id. Its results have the same shape as slopr's, with `ruleId` `fallow/<id>`.
+- fallow findings appear only in the fallow run, never in slopr's run.
 
 ## CI and coding-agent integration
 
