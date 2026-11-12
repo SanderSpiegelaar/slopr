@@ -92,13 +92,17 @@ def check_links(files):
                 errors.append(f"{f.relative_to(ROOT)}: broken anchor {target}")
 
 
-def main():
+def load_tickets():
     tickets = {}
     for path in sorted(TICKETS.glob("wave-*/*.md")):
         if t := parse_ticket(path):
             t["path"] = path
             tickets[t["id"]] = t
+    return tickets
 
+
+def check_graph(tickets):
+    """Report unknown dependencies and cycles; return each ticket's transitive dependencies."""
     for t in tickets.values():
         for dep in t["depends_on"]:
             if dep not in tickets:
@@ -122,7 +126,10 @@ def main():
 
     for tid in tickets:
         visit(tid, [])
+    return ancestors
 
+
+def check_docs(tickets, ancestors):
     for t in tickets.values():
         inherited = {c for a in ancestors[t["id"]] for c in tickets[a]["creates"]}
         for ref in t["docs"] + t["creates"]:
@@ -134,6 +141,9 @@ def main():
         if not t["verify"]:
             errors.append(f"{t['id']}: empty verify")
 
+
+def check_coverage(tickets, rules, clauses, gap_rows):
+    """Each rule, roadmap clause and open gap is covered by exactly one ticket; return the owners."""
     owners = {}
     for t in tickets.values():
         for c in t["covers"]:
@@ -148,14 +158,17 @@ def main():
             if c.startswith(kind + ":") and c.split(":", 1)[1] not in keys:
                 errors.append(f"{c} in {owners[c]} does not exist")
 
-    rules, clauses, gap_rows = catalog_rules(), roadmap_clauses(), gaps()
     expect("rule", rules, lambda k: True)
     expect("roadmap", clauses, lambda k: True)
     expect("gap", gap_rows, lambda k: not gap_rows[k])
+    return owners
 
-    def overlap(a, b):
-        return a == b or (a.endswith("/") and b.startswith(a)) or (b.endswith("/") and a.startswith(b))
 
+def overlap(a, b):
+    return a == b or (a.endswith("/") and b.startswith(a)) or (b.endswith("/") and a.startswith(b))
+
+
+def check_overlaps(tickets, ancestors):
     prs = [t for t in tickets.values() if t["kind"] != "epic"]
     for i, a in enumerate(prs):
         for b in prs[i + 1:]:
@@ -165,12 +178,9 @@ def main():
             if shared:
                 errors.append(f"{a['id']} and {b['id']} both touch {shared[0]} but are not ordered")
 
-    check_links([ROOT / "AGENTS.md", *ROOT.glob("docs/**/*.md")])
 
-    if errors:
-        print("\n".join(errors))
-        return 1
-
+def place_waves(tickets, place):
+    """Compute each ticket's wave; move misplaced tickets if place, else report them."""
     depth = {}
 
     def level(tid):
@@ -182,22 +192,45 @@ def main():
         level(tid)
         want = TICKETS / f"wave-{depth[tid]:02d}" / f"{tid}.md"
         if tickets[tid]["path"] != want:
-            if "--place" in sys.argv:
+            if place:
                 want.parent.mkdir(exist_ok=True)
                 tickets[tid]["path"].rename(want)
             else:
                 errors.append(f"{tid}: belongs in {want.parent.name}/, run --place")
-    if "--place" in sys.argv:
+    if place:
         for d in TICKETS.glob("wave-*"):
             if not any(d.iterdir()):
                 d.rmdir()
-    if errors:
-        print("\n".join(errors))
-        return 1
-    end = max(depth, key=lambda t: (depth[t], t))
-    chain = [end]
+    return depth
+
+
+def longest_chain(tickets, depth):
+    chain = [max(depth, key=lambda t: (depth[t], t))]
     while tickets[chain[-1]]["depends_on"]:
         chain.append(max(tickets[chain[-1]]["depends_on"], key=lambda d: depth[d]))
+    return chain[::-1]
+
+
+def fail():
+    print("\n".join(errors))
+    return 1
+
+
+def main():
+    tickets = load_tickets()
+    ancestors = check_graph(tickets)
+    check_docs(tickets, ancestors)
+    rules, clauses, gap_rows = catalog_rules(), roadmap_clauses(), gaps()
+    owners = check_coverage(tickets, rules, clauses, gap_rows)
+    check_overlaps(tickets, ancestors)
+    check_links([ROOT / "AGENTS.md", *ROOT.glob("docs/**/*.md")])
+    if errors:
+        return fail()
+
+    depth = place_waves(tickets, "--place" in sys.argv)
+    if errors:
+        return fail()
+    chain = longest_chain(tickets, depth)
 
     if "--clauses" in sys.argv:
         for cid, text in clauses.items():
@@ -206,7 +239,7 @@ def main():
         for w in range(max(depth.values()) + 1):
             print(f"wave {w}: {' '.join(sorted(t for t in depth if depth[t] == w))}")
     print(f"ok: {len(tickets)} tickets, {len(rules)} catalog rules, {len(clauses)} roadmap clauses, "
-          f"{len(gap_rows)} gaps; longest chain ({len(chain)}): {' -> '.join(reversed(chain))}")
+          f"{len(gap_rows)} gaps; longest chain ({len(chain)}): {' -> '.join(chain)}")
     return 0
 
 
