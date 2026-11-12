@@ -1,0 +1,295 @@
+---
+source: tests/cli.rs
+expression: stdout(&output)
+---
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "slopr",
+          "version": "0.1.0",
+          "rules": [
+            {
+              "id": "comment/agent-artifact",
+              "shortDescription": {
+                "text": "Agent chatter about its plan, spec or past edits"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "comment/narrative",
+              "shortDescription": {
+                "text": "Comment narrates what the code does"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/section-divider",
+              "shortDescription": {
+                "text": "Decorative section divider comment"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/step-numbered",
+              "shortDescription": {
+                "text": "Numbered step or phase header comment"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "comment/untracked-todo",
+              "shortDescription": {
+                "text": "TODO, FIXME, HACK or XXX without an issue reference"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "debug/leftover",
+              "shortDescription": {
+                "text": "Debug output or breakpoint left in library code"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "error/redundant-rethrow",
+              "shortDescription": {
+                "text": "Catch that only rethrows the same error"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "error/swallowed",
+              "shortDescription": {
+                "text": "Error handler that hides the failure"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "sec/hardcoded-secret",
+              "shortDescription": {
+                "text": "Hardcoded API key, token or private key"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "stub/placeholder-body",
+              "shortDescription": {
+                "text": "Function body left as a placeholder"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "test/tautological",
+              "shortDescription": {
+                "text": "Test assertion that always passes"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "text/invisible-unicode",
+              "shortDescription": {
+                "text": "Zero-width or bidi control character"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "ts/unsafe-assertion",
+              "shortDescription": {
+                "text": "Type assertion to any, or a double assertion through unknown"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "comment/agent-artifact",
+          "level": "error",
+          "message": {
+            "text": "agent artifact `as instructed`"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/comment/agent-artifact/bad.rs",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 68
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "7c2961696980909b"
+          }
+        },
+        {
+          "ruleId": "comment/agent-artifact",
+          "level": "error",
+          "message": {
+            "text": "agent artifact `was moved from`"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/comment/agent-artifact/bad.rs",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 5,
+                  "endLine": 3,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "66c819ad121d1c09"
+          }
+        },
+        {
+          "ruleId": "comment/untracked-todo",
+          "level": "note",
+          "message": {
+            "text": "`TODO` without an issue reference"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/comment/untracked-todo/bad.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 59
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "900f0a249ed00274"
+          }
+        },
+        {
+          "ruleId": "comment/untracked-todo",
+          "level": "note",
+          "message": {
+            "text": "`XXX` without an issue reference"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/comment/untracked-todo/bad.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 3,
+                  "endLine": 3,
+                  "endColumn": 23
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "f7b1b0563e8a74d5"
+          }
+        },
+        {
+          "ruleId": "ts/unsafe-assertion",
+          "level": "warning",
+          "message": {
+            "text": "`as any` assertion"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/ts/unsafe-assertion/bad.tsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 16,
+                  "endLine": 4,
+                  "endColumn": 28
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "fc76a106b62f0dae"
+          }
+        },
+        {
+          "ruleId": "ts/unsafe-assertion",
+          "level": "warning",
+          "message": {
+            "text": "`as unknown as` double assertion"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "tests/fixtures/rules/ts/unsafe-assertion/bad.tsx",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 5,
+                  "startColumn": 17,
+                  "endLine": 5,
+                  "endColumn": 43
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "slopr/v1": "ec4478f713a661f5"
+          }
+        }
+      ]
+    }
+  ]
+}

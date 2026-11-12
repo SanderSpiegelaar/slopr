@@ -1,0 +1,17 @@
+---
+source: tests/cli.rs
+expression: stdout(&output)
+---
+comment/agent-artifact error on Agent chatter about its plan, spec or past edits
+comment/narrative warn on Comment narrates what the code does
+comment/section-divider warn on Decorative section divider comment
+comment/step-numbered warn on Numbered step or phase header comment
+comment/untracked-todo info on TODO, FIXME, HACK or XXX without an issue reference
+debug/leftover warn on Debug output or breakpoint left in library code
+error/redundant-rethrow warn on Catch that only rethrows the same error
+error/swallowed error on Error handler that hides the failure
+sec/hardcoded-secret error on Hardcoded API key, token or private key
+stub/placeholder-body warn on Function body left as a placeholder
+test/tautological error on Test assertion that always passes
+text/invisible-unicode error on Zero-width or bidi control character
+ts/unsafe-assertion warn on Type assertion to any, or a double assertion through unknown
