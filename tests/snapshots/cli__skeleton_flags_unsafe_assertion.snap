@@ -1,0 +1,12 @@
+---
+source: tests/cli.rs
+expression: "String::from_utf8(output.stdout).expect(\"stdout is UTF-8\")"
+---
+tests/fixtures/rules/ts/unsafe-assertion/bad.ts:3:15 warn ts/unsafe-assertion `as any` assertion
+tests/fixtures/rules/ts/unsafe-assertion/bad.ts:4:16 warn ts/unsafe-assertion `as unknown as` double assertion
+tests/fixtures/rules/ts/unsafe-assertion/bad.ts:5:17 warn ts/unsafe-assertion `as unknown as` double assertion
+tests/fixtures/rules/ts/unsafe-assertion/bad.ts:6:16 warn ts/unsafe-assertion `<any>` assertion
+tests/fixtures/rules/ts/unsafe-assertion/bad.ts:9:11 warn ts/unsafe-assertion `as any` assertion
+
+5 ts/unsafe-assertion
+5 findings (0 error, 5 warn, 0 info)
