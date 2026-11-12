@@ -3,7 +3,7 @@ id: D-OUTPUT
 title: Decide the exit gate and output contracts
 kind: decision
 depends_on: []
-docs: [docs/reference/cli.md#cli, docs/reference/cli.md#output, docs/reference/architecture.md#core-types]
+docs: [docs/reference/cli.md#cli, docs/reference/cli.md#output-formats, docs/reference/architecture.md#core-types]
 touches: [docs/reference/cli.md]
 creates: [docs/reference/cli.md#exit-gate, docs/reference/cli.md#output-formats]
 covers: [gap:D12, gap:D13]
