@@ -400,9 +400,10 @@ fn suppress_mention_mid_line_ignored() {
     assert_suppress(
         "mention-mid-line.ts",
         "tests/fixtures/suppress/mention-mid-line.ts:6:15 warn ts/unsafe-assertion `as any` assertion
+tests/fixtures/suppress/mention-mid-line.ts:8:18 warn ts/unsafe-assertion `as any` assertion
 
-1 ts/unsafe-assertion
-1 findings (0 error, 1 warn, 0 info)
+2 ts/unsafe-assertion
+2 findings (0 error, 2 warn, 0 info)
 ",
     );
 }

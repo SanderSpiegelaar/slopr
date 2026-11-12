@@ -17,7 +17,7 @@ const MARKER: &str = "slopr-ignore-";
 
 static DIRECTIVE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"^slopr-ignore-(next-line|file)\s+([a-z0-9-]+/[a-z0-9-]+(?:\s*,\s*[a-z0-9-]+/[a-z0-9-]+)*)(?:\s+--(.*))?$",
+        r"^slopr-ignore-(next-line|file)\s+([a-z0-9-]+/[a-z0-9-]+(?:\s*,\s*[a-z0-9-]+/[a-z0-9-]+)*)(?:\s+--(?:\s+(.*))?)?$",
     )
     .expect("valid directive regex")
 });
@@ -122,7 +122,14 @@ fn candidates(file: &SourceFile) -> Vec<Candidate<'_>> {
             .flat_map(|(comment, text, _)| {
                 text.lines().filter_map(move |line| {
                     let line = line.trim_start();
-                    let line = line.strip_prefix('*').unwrap_or(line).trim_start();
+                    let at = offset(file, line);
+                    // Only continuation lines of a block comment carry a leading `*` marker.
+                    let line = match line.strip_prefix('*') {
+                        Some(rest) if file.span(at..at).start_line > comment.start_line => {
+                            rest.trim_start()
+                        }
+                        _ => line,
+                    };
                     candidate(file, line, comment.end_line)
                 })
             })
@@ -156,8 +163,7 @@ fn candidate<'a>(file: &'a SourceFile, text: &'a str, after_line: u32) -> Option
     if !text.starts_with(MARKER) {
         return None;
     }
-    // Every candidate is a subslice of file.text, so pointer distance is its byte offset.
-    let start = text.as_ptr().addr() - file.text.as_ptr().addr();
+    let start = offset(file, text);
     let next_line = (1..)
         .zip(file.text.lines())
         .find(|&(n, line)| n > after_line && !line.trim().is_empty())
@@ -167,6 +173,11 @@ fn candidate<'a>(file: &'a SourceFile, text: &'a str, after_line: u32) -> Option
         span: file.span(start..start + text.len()),
         next_line,
     })
+}
+
+/// Byte offset of `s` in `file.text`. `s` must borrow from `file.text`.
+fn offset(file: &SourceFile, s: &str) -> usize {
+    s.as_ptr().addr() - file.text.as_ptr().addr()
 }
 
 fn parse(text: &str) -> Result<(Scope, Vec<&str>), Invalid<'_>> {
@@ -227,5 +238,18 @@ mod tests {
         apply(&[file], &mut findings);
         let lines: Vec<u32> = findings.iter().map(|f| f.span.start_line).collect();
         assert_eq!(lines, [4]);
+    }
+
+    #[test]
+    fn reason_needs_space_after_separator() {
+        let file = "slopr-ignore-file ts/unsafe-assertion";
+        assert!(matches!(
+            parse(&format!("{file} --because")),
+            Err(Invalid::Malformed)
+        ));
+        assert!(matches!(
+            parse(&format!("{file} -- because")),
+            Ok((Scope::File, _))
+        ));
     }
 }
