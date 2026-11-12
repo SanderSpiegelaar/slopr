@@ -4,7 +4,6 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
-use crate::config::RuleSettings;
 use crate::finding::Severity;
 
 mod config;
@@ -28,6 +27,8 @@ enum Command {
         #[arg(default_value = ".")]
         paths: Vec<PathBuf>,
     },
+    /// Write slopr.toml with defaults
+    Init,
 }
 
 fn main() -> ExitCode {
@@ -41,9 +42,24 @@ fn main() -> ExitCode {
 }
 
 fn run(cli: Cli) -> anyhow::Result<ExitCode> {
-    let Command::Check { paths } = cli.command;
-    let files = walk::files(&paths)?;
-    let findings = rules::run_rules(&files, &RuleSettings::default());
+    match cli.command {
+        Command::Check { paths } => check(&paths),
+        Command::Init => config::init().map(|()| ExitCode::SUCCESS),
+    }
+}
+
+fn check(paths: &[PathBuf]) -> anyhow::Result<ExitCode> {
+    let config = config::load()?;
+    let files = walk::files(paths, &config.exclude)?;
+    let mut findings = rules::run_rules(&files, config.settings());
+    findings.retain_mut(|finding| {
+        let rule = config::native_rule(&finding.rule).expect("findings come from native rules");
+        let Some(severity) = config.severity(rule, &finding.path) else {
+            return false;
+        };
+        finding.severity = severity;
+        true
+    });
     io::stdout().write_all(report::render_human(&findings).as_bytes())?;
     let gate_failed = findings.iter().any(|f| f.severity >= Severity::Error);
     Ok(if gate_failed {

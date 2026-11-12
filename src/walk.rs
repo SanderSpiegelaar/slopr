@@ -29,7 +29,7 @@ const TEST_GLOBS: &[&str] = &[
 /// # Errors
 ///
 /// A path that does not exist or lies outside the root.
-pub fn files(paths: &[PathBuf]) -> Result<Vec<SourceFile>> {
+pub fn files(paths: &[PathBuf], exclude: &GlobSet) -> Result<Vec<SourceFile>> {
     let root = std::env::current_dir()?.canonicalize()?;
     let test_globs = test_globs();
     let mut found = Vec::new();
@@ -64,7 +64,7 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<SourceFile>> {
 
     let loaded: Vec<_> = found
         .par_iter()
-        .map(|path| load(path, &test_globs))
+        .map(|path| load(path, exclude, &test_globs))
         .collect();
     let mut files = Vec::with_capacity(loaded.len());
     for result in loaded {
@@ -77,12 +77,15 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<SourceFile>> {
     Ok(files)
 }
 
-/// `None` for files skipped silently: over 1 MiB, binary, or not UTF-8.
-fn load(path: &Path, test_globs: &GlobSet) -> Result<Option<SourceFile>> {
+/// `None` for files skipped silently: excluded, over 1 MiB, binary, or not UTF-8.
+fn load(path: &Path, exclude: &GlobSet, test_globs: &GlobSet) -> Result<Option<SourceFile>> {
     let shown = path.display();
     let Some(relative) = root_relative(path) else {
         bail!("{shown}: path is not UTF-8");
     };
+    if exclude.is_match(&relative) {
+        return Ok(None);
+    }
     let mut bytes = Vec::new();
     let file = fs::File::open(path).with_context(|| format!("{shown}"))?;
     file.take(MAX_FILE_BYTES + 1)
