@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::LazyLock;
 
@@ -31,14 +31,15 @@ enum Scope {
 struct Candidate<'a> {
     text: &'a str,
     span: Span,
-    next_line: Option<u32>,
+    /// `next-line` targets the first non-blank line after this one.
+    after_line: u32,
 }
 
 /// What one file's valid directives hide.
 #[derive(Default)]
 struct Suppressions<'a> {
-    file: Vec<&'a str>,
-    lines: Vec<(u32, &'a str)>,
+    file: HashSet<&'a str>,
+    lines: HashSet<(u32, &'a str)>,
 }
 
 impl Suppressions<'_> {
@@ -87,11 +88,12 @@ fn scan(file: &SourceFile) -> (Suppressions<'_>, Vec<Finding>) {
     let mut hidden = Suppressions::default();
     let mut invalid = Vec::new();
     let mut occurrences: HashMap<String, usize> = HashMap::new();
+    let next_non_blank = next_non_blank(&file.text);
     for candidate in candidates(file) {
         match parse(candidate.text) {
             Ok((Scope::File, ids)) => hidden.file.extend(ids),
             Ok((Scope::NextLine, ids)) => {
-                if let Some(line) = candidate.next_line {
+                if let Some(line) = next_non_blank[candidate.after_line as usize] {
                     hidden.lines.extend(ids.into_iter().map(|id| (line, id)));
                 }
             }
@@ -157,22 +159,32 @@ fn strip_line_marker(line: &str) -> &str {
     line.trim_start()
 }
 
-/// `text` must borrow from `file.text`; `after_line` is where `next-line` starts looking.
+/// `text` must borrow from `file.text`.
 fn candidate<'a>(file: &'a SourceFile, text: &'a str, after_line: u32) -> Option<Candidate<'a>> {
     let text = text.trim_end();
     if !text.starts_with(MARKER) {
         return None;
     }
     let start = offset(file, text);
-    let next_line = (1..)
-        .zip(file.text.lines())
-        .find(|&(n, line)| n > after_line && !line.trim().is_empty())
-        .map(|(n, _)| n);
     Some(Candidate {
         text,
         span: file.span(start..start + text.len()),
-        next_line,
+        after_line,
     })
+}
+
+/// Index `n` holds the first non-blank line after 1-based line `n`.
+fn next_non_blank(text: &str) -> Vec<Option<u32>> {
+    let lines: Vec<(u32, &str)> = (1..).zip(text.lines()).collect();
+    let mut next = vec![None; lines.len() + 1];
+    for (i, &(n, line)) in lines.iter().enumerate().rev() {
+        next[i] = if line.trim().is_empty() {
+            next[i + 1]
+        } else {
+            Some(n)
+        };
+    }
+    next
 }
 
 /// Byte offset of `s` in `file.text`. `s` must borrow from `file.text`.
