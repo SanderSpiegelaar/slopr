@@ -103,6 +103,15 @@ expression: stdout(&output)
               }
             },
             {
+              "id": "suppress/invalid-directive",
+              "shortDescription": {
+                "text": "Suppression directive that is malformed, has no reason or names an unknown rule"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
               "id": "test/tautological",
               "shortDescription": {
                 "text": "Test assertion that always passes"
