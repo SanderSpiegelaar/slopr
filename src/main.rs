@@ -5,13 +5,14 @@ use std::process::ExitCode;
 use clap::builder::PossibleValue;
 use clap::{Parser, Subcommand, ValueEnum};
 
-use crate::finding::Severity;
+use crate::finding::{Finding, Severity};
 
 mod config;
 mod finding;
 mod report;
 mod rules;
 mod source;
+mod suppress;
 mod walk;
 
 #[derive(Parser)]
@@ -96,6 +97,8 @@ fn check(paths: &[PathBuf], format: Format, gate: Severity) -> anyhow::Result<Ex
         finding.severity = severity;
         true
     });
+    suppress::apply(&files, &mut findings);
+    findings.sort_by(|a, b| report_order(a).cmp(&report_order(b)));
     let out = match format {
         Format::Human => report::render_human(&findings),
         Format::Json => report::render_json(&findings),
@@ -108,4 +111,14 @@ fn check(paths: &[PathBuf], format: Format, gate: Severity) -> anyhow::Result<Ex
     } else {
         ExitCode::SUCCESS
     })
+}
+
+fn report_order(f: &Finding) -> (&[u8], u32, u32, &str, &str) {
+    (
+        f.path.as_bytes(),
+        f.span.start_line,
+        f.span.start_col,
+        &f.rule,
+        &f.message,
+    )
 }

@@ -2,6 +2,7 @@ use serde::Serialize;
 
 use crate::finding::{Finding, Severity, Span};
 use crate::report::native_rules;
+use crate::suppress;
 
 #[derive(Serialize)]
 struct Log<'a> {
@@ -123,7 +124,7 @@ impl From<Span> for Region {
 
 /// A SARIF 2.1.0 log with slopr's run, pretty-printed with a trailing newline.
 pub fn render_sarif(findings: &[Finding]) -> String {
-    let rules = native_rules()
+    let mut rules: Vec<RuleDescriptor> = native_rules()
         .into_iter()
         .map(|rule| RuleDescriptor {
             id: rule.id,
@@ -133,6 +134,16 @@ pub fn render_sarif(findings: &[Finding]) -> String {
             },
         })
         .collect();
+    rules.push(RuleDescriptor {
+        id: suppress::INVALID_DIRECTIVE,
+        short_description: Text {
+            text: suppress::INVALID_DIRECTIVE_SUMMARY,
+        },
+        default_configuration: Configuration {
+            level: Level::Warning,
+        },
+    });
+    rules.sort_unstable_by_key(|rule| rule.id);
     let results = findings.iter().map(result).collect();
     let log = Log {
         schema: "https://json.schemastore.org/sarif-2.1.0.json",
