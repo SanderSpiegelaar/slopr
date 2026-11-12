@@ -27,15 +27,16 @@ Read the files listed for your task. Do not load the others.
 
 | Task | Files |
 |---|---|
-| Phase 0 spike | [dependencies](reference/dependencies.md), [fallow](reference/fallow.md), [roadmap](plan/roadmap.md) |
+| Phase 0 spike | [dependencies](reference/dependencies.md), [fallow](reference/fallow.md), [roadmap](roadmap.md) |
 | Scaffold the core pipeline (walk, source, finding, main) | [architecture](reference/architecture.md), [dependencies](reference/dependencies.md), [cli](reference/cli.md), [config](reference/config.md) |
 | Implement or add a rule | [rules](reference/rules.md), [architecture](reference/architecture.md), [config](reference/config.md), [testing](reference/testing.md), [licensing](reference/licensing.md). When porting a phrase list or pattern, also [sources](research/sources.md#per-repo-notes-code-read-paths-cited). |
 | fallow integration | [fallow](reference/fallow.md), [architecture](reference/architecture.md), [cli](reference/cli.md), [config](reference/config.md), [testing](reference/testing.md) |
 | CLI, output formats, exit codes | [architecture](reference/architecture.md), [cli](reference/cli.md) |
 | Config, suppressions, baseline | [architecture](reference/architecture.md), [cli](reference/cli.md), [config](reference/config.md) |
-| Diff mode (`--changed-since`, `--staged`, `pr/*` rules) | [rules](reference/rules.md), [fallow](reference/fallow.md), [cli](reference/cli.md), [roadmap](plan/roadmap.md) |
+| Diff mode (`--changed-since`, `--staged`, `pr/*` rules) | [rules](reference/rules.md), [fallow](reference/fallow.md), [cli](reference/cli.md), [roadmap](roadmap.md) |
 | Test infrastructure (harness, snapshots, FP corpus) | [architecture](reference/architecture.md), [cli](reference/cli.md), [testing](reference/testing.md) |
 | CI, pre-commit, agent skill | [cli](reference/cli.md) |
-| Release (licenses, notices, naming) | [dependencies](reference/dependencies.md), [licensing](reference/licensing.md), [roadmap](plan/roadmap.md) |
-| v2 semantic duplicates | [rules](reference/rules.md), [licensing](reference/licensing.md), [roadmap](plan/roadmap.md), [sources](research/sources.md) |
-| Revisit a decision or a source | [roadmap](plan/roadmap.md), [sources](research/sources.md), [decisions](research/decisions.md) |
+| Release (licenses, notices, naming) | [dependencies](reference/dependencies.md), [licensing](reference/licensing.md), [roadmap](roadmap.md) |
+| v2 semantic duplicates | [rules](reference/rules.md), [licensing](reference/licensing.md), [roadmap](roadmap.md), [sources](research/sources.md) |
+| Implement a ticket | [tickets](tickets/README.md), the ticket file, and the files in its `docs` list |
+| Revisit a decision or a source | [roadmap](roadmap.md), [sources](research/sources.md), [decisions](research/decisions.md) |

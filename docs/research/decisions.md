@@ -22,3 +22,13 @@ Rejected: shipping slopr as one self-contained binary with fallow linked in. It 
 ## Crates not used
 
 Not used, with reason: `serde-sarif` 0.8.0 (last release 2025-05, and slopr needs raw passthrough of fallow runs anyway; a 60-line struct set is enough); `ast-grep-core` 0.51.2 (good option if rules move to declarative patterns; not needed for v0 Rust-function rules); `oxc_parser` (fallow already covers JS/TS semantics; tree-sitter gives one API across languages); `rmcp` 3.9.0 (MCP server deferred to v2).
+
+## Ticket plan (2026-11-12)
+
+Approved by Sander on 2026-11-12.
+
+- Tickets live as markdown in [docs/tickets](../tickets/README.md). `scripts/check-tickets.py` checks them against the roadmap, the rule catalog and the gap list.
+- One ticket per rule family (one `src/rules/<family>.rs` module), not one per rule.
+- Full tickets through v1. v2 items are epics.
+- Gap tickets apply the documented default. Tickets marked `signoff: user` need Sander's approval on the PR.
+- `slopr init` and `slopr rules` ship in v0. `slopr explain` and the release files (`LICENSE-MIT`, `LICENSE-APACHE`, `THIRD_PARTY_NOTICES.md`) ship in v1. Renaming slopr stays open until publishing.
