@@ -111,7 +111,7 @@ The shorthand is the same as in v0 language coverage, plus GO for Go.
 Go joins all `comment/*` and `text/*` rules, `sec/hardcoded-secret`, and these:
 
 - `error/swallowed`: `if err != nil {}` with an empty block.
-- `stub/placeholder-body`: a body that is only `panic(<string>)` matching the stub regex.
+- `stub/placeholder-body`: a function body whose only statement is `panic(<string>)`, with the string matching the TS/JS regex `(?i)not implemented|implement (me|this)|todo`.
 - `test/tautological`: in `_test.go`, testify `assert.True(t, true)`, `require.True(t, true)`, and `assert.Equal(t, A, B)` with the same literal.
 - `debug/leftover`: `fmt.Print*` and builtin `print`/`println`, skipping `package main` and test files.
 
