@@ -41,7 +41,7 @@ Cost: per-file CPU on top of parsing. FP = false-positive risk.
 | `comment/hedging` | "should work", "might need to" | vibecheck `no-hedging-comments` | phrase | low | medium | later |
 | `naming/stutter`, `naming/verbosity`, `naming/tersity` | identifier vocabulary discipline | agent-slop-lint `lexical.*` | AST identifiers | low | medium | later |
 | `naming/symbol-collision` | one name defined in many places | aicomplex symbol-collision | Graph | medium | medium | later |
-| `error/hidden-fallback` | `?? 0`, `|| []` that hide failures | aislop `ai-slop/hidden-fallback` | heuristic | medium | high | later |
+| `error/hidden-fallback` | `?? 0`, `\|\| []` that hide failures | aislop `ai-slop/hidden-fallback` | heuristic | medium | high | later |
 | Dead code: unused files, exports, types, deps, members | | aislop (knip); aicomplex dead-exports, orphan-files; agent-slop-lint `structural.orphans` | Graph | | | via fallow for JS/TS; other languages use ruff, clippy, staticcheck; no native rule |
 | Cycles and boundaries | | aicomplex import-cycles; agent-slop-lint `structural.deps`; aislop architecture | Graph | | | via fallow `circular-dependencies`, `boundary-violation`; no native rule |
 | Security sinks: eval, innerHTML, SQL and shell concatenation | | aislop `security/*`; vibecheck `no-eval`, `no-innerhtml`, `no-sql-concat` | | | | JS/TS via `fallow security` (opt-in); no native rule (use Semgrep) |
@@ -52,7 +52,7 @@ Cost: per-file CPU on top of parsing. FP = false-positive risk.
 | Formatter and linter orchestration | | aislop format and lint engines | | | | cut: users keep their own linters |
 | Score 0 to 100 | | aislop, aicomplex, vibecheck, rayonx | | | | cut: gate on severity plus baseline |
 
-Overlap policy: when fallow is enabled and the file is JS/TS, a native rule marked "via fallow" does not run. Native rules that fallow lacks (comment, text, error, stub, test, debug, ts, sec rows above) always run.
+Overlap policy: a native rule marked "via fallow" leaves JS and TS out of its `langs`, so fallow alone covers those languages. Native rules that fallow lacks (comment, text, error, stub, test, debug, ts, sec rows above) always run.
 
 ## v0 language coverage
 
