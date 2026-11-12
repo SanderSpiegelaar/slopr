@@ -1,0 +1,95 @@
+---
+source: tests/cli.rs
+expression: "repo_report(\"py-lib\", \"json\")"
+---
+{
+  "schema_version": 1,
+  "version": "0.1.0",
+  "findings": [
+    {
+      "rule": "error/swallowed",
+      "severity": "error",
+      "path": "src/ledger/rates.py",
+      "span": {
+        "start_line": 10,
+        "start_col": 5,
+        "end_line": 11,
+        "end_col": 13
+      },
+      "message": "except block swallows the error",
+      "fingerprint": "106fb134847451f0",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "comment/untracked-todo",
+      "severity": "info",
+      "path": "src/ledger/rates.py",
+      "span": {
+        "start_line": 16,
+        "start_col": 5,
+        "end_line": 16,
+        "end_col": 31
+      },
+      "message": "`TODO` without an issue reference",
+      "fingerprint": "2ff16444a7ebe0d1",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "debug/leftover",
+      "severity": "warn",
+      "path": "src/ledger/report.py",
+      "span": {
+        "start_line": 6,
+        "start_col": 5,
+        "end_line": 6,
+        "end_col": 17
+      },
+      "message": "`print` left in library code",
+      "fingerprint": "b77d98682501fc43",
+      "origin": {
+        "kind": "native"
+      }
+    },
+    {
+      "rule": "test/tautological",
+      "severity": "error",
+      "path": "tests/test_accounts.py",
+      "span": {
+        "start_line": 11,
+        "start_col": 5,
+        "end_line": 11,
+        "end_col": 16
+      },
+      "message": "assertion always passes",
+      "fingerprint": "f657b9b75697c67a",
+      "origin": {
+        "kind": "native"
+      }
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "by_severity": {
+      "error": 2,
+      "warn": 1,
+      "info": 1
+    },
+    "by_rule": {
+      "comment/untracked-todo": 1,
+      "debug/leftover": 1,
+      "error/swallowed": 1,
+      "test/tautological": 1
+    }
+  },
+  "tools": [
+    {
+      "name": "fallow",
+      "version": null,
+      "status": "skipped"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+---
+source: tests/cli.rs
+expression: "repo_report(\"rust-crate\", \"human\")"
+---
+src/parse.rs:8:5 warn debug/leftover `dbg!` left in library code
+src/parse.rs:13:5 warn stub/placeholder-body function body is only a placeholder
+
+src/store.rs:4:1 warn comment/narrative narrative comment opener `this function`
+src/store.rs:6:5 error error/swallowed `.ok()` discards the error
+
+1 comment/narrative
+1 debug/leftover
+1 error/swallowed
+1 stub/placeholder-body
+4 findings (1 error, 3 warn, 0 info)

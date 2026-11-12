@@ -1,0 +1,16 @@
+---
+source: tests/cli.rs
+expression: "repo_report(\"py-lib\", \"human\")"
+---
+src/ledger/rates.py:10:5 error error/swallowed except block swallows the error
+src/ledger/rates.py:16:5 info comment/untracked-todo `TODO` without an issue reference
+
+src/ledger/report.py:6:5 warn debug/leftover `print` left in library code
+
+tests/test_accounts.py:11:5 error test/tautological assertion always passes
+
+1 comment/untracked-todo
+1 debug/leftover
+1 error/swallowed
+1 test/tautological
+4 findings (2 error, 1 warn, 1 info)
